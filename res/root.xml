@@ -1,0 +1,9 @@
+<view width="match_parent" height="match_parent" type="size_vertical" align="center">
+        <view width="fill_parent" height="50">
+        </view>
+        <view width="fill_parent" height="fill_parent">
+
+        </view>
+        <view width="fill_parent" height="50">
+        </view>
+</view>
