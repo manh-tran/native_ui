@@ -32,7 +32,7 @@ struct intercept_head {
         struct list_head        head;
         struct list_head        sib_head;
 
-        struct nview      *view;
+        struct native_view      *view;
 };
 
 static void __intercept_head_free(struct intercept_head *p)
@@ -51,7 +51,7 @@ static struct intercept_head *__intercept_head_alloc()
         return p;
 }
 
-void nview_init(struct nview *p)
+void native_view_init(struct native_view *p)
 {
         INIT_LIST_HEAD(&p->head);
         INIT_LIST_HEAD(&p->children);
@@ -59,7 +59,7 @@ void nview_init(struct nview *p)
         p->name_to_child                = NULL;
 
         INIT_LIST_HEAD(&p->layout_controller);
-        p->align                        = nview_align_alloc();
+        p->align                        = native_view_align_alloc();
         p->update                       = NATIVE_UI_UPDATE_SELF | NATIVE_UI_UPDATE_CHILDREN;
 
         INIT_LIST_HEAD(&p->view_controller);
@@ -85,6 +85,7 @@ void nview_init(struct nview *p)
         p->clip_rounds                  = (union vec4){0, 0, 0, 0};
         p->alpha                        = 1.0f;
         p->visible                      = 1;
+        p->weights                      = 1;
 
         p->touch_began_point            = (union vec2){0, 0};
         p->touch_moved_point            = (union vec2){0, 0};
@@ -120,31 +121,31 @@ void nview_init(struct nview *p)
 static void __free_task(struct list_head *head)
 {
         if(!list_singular(head)) {
-                struct ntask *task = (struct ntask *)
-                        ((char *)head->next - offsetof(struct ntask, user_head));
-                ntask_free(task);
+                struct native_task *task = (struct native_task *)
+                        ((char *)head->next - offsetof(struct native_task, user_head));
+                native_task_free(task);
         }
         sfree(head);
 }
 
-void nview_free_common(struct nview *p)
+void native_view_free_common(struct native_view *p)
 {
         struct list_head *head;
         /*
          * remove touch
          */
-        list_for_each_secure_mutex_lock(head, &p->touch_list, &__shared_nview_touch_lock, {
-                struct nview_touch_data *data = (struct nview_touch_data *)
-                        ((char *)head - offsetof(struct nview_touch_data, head));
-                nview_touch_data_free(data);
+        list_for_each_secure_mutex_lock(head, &p->touch_list, &__shared_native_view_touch_lock, {
+                struct native_view_touch_data *data = (struct native_view_touch_data *)
+                        ((char *)head - offsetof(struct native_view_touch_data, head));
+                native_view_touch_data_free(data);
         });
         /*
          * remove sub views
          */
         list_while_not_singular(head, &p->children) {
-                struct nview *child       = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
-                nview_free(child);
+                struct native_view *child       = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
+                native_view_free(child);
         }
         /*
          * detach view from parent
@@ -165,29 +166,29 @@ void nview_free_common(struct nview *p)
          */
         list_del_init(&p->hash_head);
         if(!list_singular(&p->parser)) {
-                struct nparser *parser = (struct nparser *)
-                        ((char *)p->parser.next - offsetof(struct nparser, view));
+                struct native_parser *parser = (struct native_parser *)
+                        ((char *)p->parser.next - offsetof(struct native_parser, view));
                 list_del_init(&p->parser);
-                nparser_free(parser);
+                native_parser_free(parser);
         }
         list_del_init(&p->parser);
         /*
          * detach layout controller
          */
         if(!list_singular(&p->layout_controller)) {
-                struct nlyt_exec *controller = (struct nlyt_exec *)
-                        ((char *)p->layout_controller.next - offsetof(struct nlyt_exec, head));
-                nlyt_exec_free(controller);
+                struct native_layout *controller = (struct native_layout *)
+                        ((char *)p->layout_controller.next - offsetof(struct native_layout, head));
+                native_layout_free(controller);
         }
-        nview_align_free(p->align);
+        native_view_align_free(p->align);
         /*
          * detach user controller
          */
         if(!list_singular(&p->view_controller)) {
-                struct nexec *controller = (struct nexec *)
-                        ((char *)p->view_controller.next - offsetof(struct nexec, view));
+                struct native_controller *controller = (struct native_controller *)
+                        ((char *)p->view_controller.next - offsetof(struct native_controller, view));
                 list_del_init(&p->view_controller);
-                nexec_free(controller);
+                native_controller_free(controller);
         }
         /*
          * clear custom data
@@ -233,17 +234,17 @@ void nview_free_common(struct nview *p)
         naction_key_clear(&p->action_key);
 }
 
-void nview_remove_all_children(struct nview *p)
+void native_view_remove_all_children(struct native_view *p)
 {
         struct list_head *head;
         list_while_not_singular(head, &p->children) {
-                struct nview *child       = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
-                nview_free(child);
+                struct native_view *child       = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
+                native_view_free(child);
         }
 }
 
-void nview_set_intercept_horizontal(struct nview *from, struct nview *to)
+void native_view_set_intercept_horizontal(struct native_view *from, struct native_view *to)
 {
         if(!list_singular(&from->intercept_horizontal)) {
                 struct intercept_head *ih = (struct intercept_head *)
@@ -257,7 +258,7 @@ void nview_set_intercept_horizontal(struct nview *from, struct nview *to)
         head->view = to;
 }
 
-void nview_set_intercept_vertical(struct nview *from, struct nview *to)
+void native_view_set_intercept_vertical(struct native_view *from, struct native_view *to)
 {
         if(!list_singular(&from->intercept_vertical)) {
                 struct intercept_head *ih = (struct intercept_head *)
@@ -271,17 +272,17 @@ void nview_set_intercept_vertical(struct nview *from, struct nview *to)
         head->view = to;
 }
 
-struct nparser *nview_get_parser(struct nview *p)
+struct native_parser *native_view_get_parser(struct native_view *p)
 {
         if(!list_singular(&p->parser)) {
-                struct nparser *parser = (struct nparser *)
-                        ((char *)p->parser.next - offsetof(struct nparser, view));
+                struct native_parser *parser = (struct native_parser *)
+                        ((char *)p->parser.next - offsetof(struct native_parser, view));
                 return parser;
         }
         return NULL;
 }
 
-void nview_schedule(struct nview *p, char *key, size_t len, int count, ntaskf delegate)
+void native_view_schedule(struct native_view *p, char *key, size_t len, int count, native_task_delegate delegate)
 {
         if(map_has_key(p->tasks, key, len)) {
                 struct list_head *head = map_get(p->tasks, struct list_head *, key, len);
@@ -292,7 +293,7 @@ void nview_schedule(struct nview *p, char *key, size_t len, int count, ntaskf de
         struct list_head *head   = smalloc(sizeof(struct list_head), NULL);
         INIT_LIST_HEAD(head);
 
-        struct ntask *task = ntask_alloc();
+        struct native_task *task = native_task_alloc();
         list_add_tail(&task->user_head, head);
         task->count     = count;
         task->data      = p;
@@ -301,7 +302,7 @@ void nview_schedule(struct nview *p, char *key, size_t len, int count, ntaskf de
         map_set(p->tasks, key, len, &head);
 }
 
-void nview_unschedule(struct nview *p, char *key, size_t len)
+void native_view_unschedule(struct native_view *p, char *key, size_t len)
 {
         if(map_has_key(p->tasks, key, len)) {
                 struct list_head *head = map_get(p->tasks, struct list_head *, key, len);
@@ -310,12 +311,12 @@ void nview_unschedule(struct nview *p, char *key, size_t len)
         }
 }
 
-void nview_update_layout(struct nview *p)
+void native_view_update_layout(struct native_view *p)
 {
         if(!list_singular(&p->layout_controller)) {
-                struct nlyt_exec *controller = (struct nlyt_exec *)
-                        ((char *)p->layout_controller.next - offsetof(struct nlyt_exec, head));
-                nlyt_exec_update(controller);
+                struct native_layout *controller = (struct native_layout *)
+                        ((char *)p->layout_controller.next - offsetof(struct native_layout, head));
+                native_layout_update(controller);
         } else {
                 union vec2 size = p->size;
                 if(p->align->size_width == NATIVE_UI_SIZE_FIXED)
@@ -323,16 +324,16 @@ void nview_update_layout(struct nview *p)
                 if(p->align->size_height == NATIVE_UI_SIZE_FIXED)
                         size.height = p->align->fixed_height;
 
-                nview_set_size(p, size);
-                nview_update_label(p);
+                native_view_set_size(p, size);
+                native_view_update_label(p);
         }
 }
 
-void nview_request_layout(struct nview *p)
+void native_view_request_layout(struct native_view *p)
 {
         if(p->parent) {
-                struct nview *parent = p->parent;
-                struct nview *super_parent = parent->parent;
+                struct native_view *parent = p->parent;
+                struct native_view *super_parent = parent->parent;
                 if(!list_singular(&parent->layout_controller)) {
                         goto check_super_parent;
                 } else {
@@ -342,8 +343,8 @@ void nview_request_layout(struct nview *p)
         check_super_parent:;
                 if(super_parent) {
                         if(!list_singular(&super_parent->layout_controller)) {
-                                struct nlyt_exec *controller = (struct nlyt_exec *)
-                                        ((char *)super_parent->layout_controller.next - offsetof(struct nlyt_exec, head));
+                                struct native_layout *controller = (struct native_layout *)
+                                        ((char *)super_parent->layout_controller.next - offsetof(struct native_layout, head));
                                 switch (p->type) {
                                         case NATIVE_UI_LAYOUT_VERTICAL:
                                         case NATIVE_UI_LAYOUT_HORIZONTAL:
@@ -363,105 +364,105 @@ void nview_request_layout(struct nview *p)
         update:;
                 parent->update |= NATIVE_UI_UPDATE_SELF;
                 parent->update |= NATIVE_UI_UPDATE_CHILDREN;
-                nview_update_layout(parent);
+                native_view_update_layout(parent);
         } else {
                 p->update |= NATIVE_UI_UPDATE_SELF;
                 p->update |= NATIVE_UI_UPDATE_CHILDREN;
-                nview_update_layout(p);
+                native_view_update_layout(p);
         }
 }
 
-void nview_request_position(struct nview *p, union vec2 position)
+void native_view_request_position(struct native_view *p, union vec2 position)
 {
-        nview_set_position(p, position);
-        nview_request_layout(p);
+        native_view_set_position(p, position);
+        native_view_request_layout(p);
 }
 
-void nview_request_size(struct nview *p, union vec2 size)
+void native_view_request_size(struct native_view *p, union vec2 size)
 {
-        nview_set_size(p, size);
-        nview_request_layout(p);
+        native_view_set_size(p, size);
+        native_view_request_layout(p);
 }
 
-void nview_request_fixed_size(struct nview *p, union vec2 size)
+void native_view_request_fixed_size(struct native_view *p, union vec2 size)
 {
-        nview_set_fixed_size(p, size);
-        nview_request_layout(p);
+        native_view_set_fixed_size(p, size);
+        native_view_request_layout(p);
 }
 
-void nview_request_scale(struct nview *p, union vec2 scale)
+void native_view_request_scale(struct native_view *p, union vec2 scale)
 {
-        nview_set_scale(p, scale);
-        nview_request_layout(p);
+        native_view_set_scale(p, scale);
+        native_view_request_layout(p);
 }
 
-void nview_request_rotation(struct nview *p, union vec3 rotation)
+void native_view_request_rotation(struct native_view *p, union vec3 rotation)
 {
-        nview_set_rotation(p, rotation);
-        nview_request_layout(p);
+        native_view_set_rotation(p, rotation);
+        native_view_request_layout(p);
 }
 
-void nview_request_margin(struct nview *p, union vec4 margin)
+void native_view_request_margin(struct native_view *p, union vec4 margin)
 {
         p->align->margin        = margin;
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_request_padding(struct nview *p, union vec4 padding)
+void native_view_request_padding(struct native_view *p, union vec4 padding)
 {
         p->align->padding              = padding;
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_layout_type(struct nview *p, u8 type)
+void native_view_set_layout_type(struct native_view *p, u8 type)
 {
         /*
          * ensure p has controller
          */
         if(list_singular(&p->layout_controller)) {
-                struct nlyt_exec *controller = nlyt_exec_alloc();
+                struct native_layout *controller = native_layout_alloc();
                 list_add_tail(&controller->head, &p->layout_controller);
         }
         /*
          * reset controller type
          */
-        struct nlyt_exec *controller = (struct nlyt_exec *)
-                ((char *)p->layout_controller.next - offsetof(struct nlyt_exec, head));
+        struct native_layout *controller = (struct native_layout *)
+                ((char *)p->layout_controller.next - offsetof(struct native_layout, head));
         if(controller->type != type) {
                 p->update = NATIVE_UI_UPDATE_SELF | NATIVE_UI_UPDATE_CHILDREN;
         }
         controller->type        = type;
 }
 
-void nview_set_fixed_size(struct nview *p, union vec2 size)
+void native_view_set_fixed_size(struct native_view *p, union vec2 size)
 {
         p->align->fixed_width   = size.width;
         p->align->fixed_height  = size.height;
 }
 
-void nview_touch_began(struct nview *p, union vec2 liv)
+void native_view_touch_began(struct native_view *p, union vec2 liv)
 {
         p->touch_began_point = liv;
         p->touch_moved_point = liv;
         p->touch_offset      = (union vec2){0, 0};
         switch (p->type) {
                 case NATIVE_UI_LISTVIEW:
-                        nview_list_view_touch_began(p, liv);
+                        native_view_list_view_touch_began(p, liv);
                         break;
                 default:
                         break;
         }
         if(p->touch_began_delegate) {
-                p->touch_began_delegate(p, 0, liv);
+                p->touch_began_delegate(p, p->touch_data, 0, liv);
         }
         if(p->parser_touch_handle) {
-                ntouch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_BEGAN);
+                native_touch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_BEGAN);
         }
 }
 
-static struct nview *__find_intercept_vertical_view(struct nview *p)
+static struct native_view *__find_intercept_vertical_view(struct native_view *p)
 {
-        struct nview *target = p;
+        struct native_view *target = p;
 
 search:;
         if(!list_singular(&target->intercept_vertical)) {
@@ -480,9 +481,9 @@ search:;
         return NULL;
 }
 
-static struct nview *__find_intercept_horizontal_view(struct nview *p)
+static struct native_view *__find_intercept_horizontal_view(struct native_view *p)
 {
-        struct nview *target = p;
+        struct native_view *target = p;
 
 search:;
         if(!list_singular(&target->intercept_horizontal)) {
@@ -500,51 +501,51 @@ search:;
         return NULL;
 }
 
-void nview_touch_moved(struct nview *p, union vec2 liv)
+void native_view_touch_moved(struct native_view *p, union vec2 liv)
 {
         p->touch_offset = vec2_sub(liv, p->touch_moved_point);
         p->touch_moved_point = liv;
 
         if(p->intercept_vertical_target) {
-                nview_touch_moved(p->intercept_vertical_target,
+                native_view_touch_moved(p->intercept_vertical_target,
                         vec2_add(p->intercept_vertical_target->touch_began_point,
                                 vec2_sub(p->touch_moved_point, p->touch_began_point)));
         } else if(p->intercept_horizontal_target){
-                nview_touch_moved(p->intercept_horizontal_target,
+                native_view_touch_moved(p->intercept_horizontal_target,
                         vec2_add(p->intercept_horizontal_target->touch_began_point,
                                 vec2_sub(p->touch_moved_point, p->touch_began_point)));
         } else {
                 switch (p->type) {
                         case NATIVE_UI_LISTVIEW:
-                                nview_list_view_touch_moved(p, liv);
+                                native_view_list_view_touch_moved(p, liv);
                                 break;
                         default:
                                 break;
                 }
                 if(p->touch_moved_delegate) {
-                        p->touch_moved_delegate(p, 0, liv);
+                        p->touch_moved_delegate(p, p->touch_data, 0, liv);
                 }
                 if(p->parser_touch_handle) {
-                        ntouch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_MOVED);
+                        native_touch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_MOVED);
                 }
                 if(!list_singular(&p->intercept_vertical) || !list_singular(&p->intercept_horizontal)) {
                         if(fabsf(p->touch_moved_point.x - p->touch_began_point.x) <= 10
                                 && fabsf(p->touch_moved_point.y - p->touch_began_point.y) >= 10) {
-                                struct nview *target = __find_intercept_vertical_view(p);
+                                struct native_view *target = __find_intercept_vertical_view(p);
                                 if(target) {
-                                        nview_touch_cancelled(p, liv);
+                                        native_view_touch_cancelled(p, liv);
                                         p->intercept_vertical_target    = target;
-                                        nview_touch_began(target, nview_convert_point_to_view(p, p->touch_began_point, target));
+                                        native_view_touch_began(target, native_view_convert_point_to_view(p, p->touch_began_point, target));
                                         goto finish;
                                 }
                         }
                         else if(fabsf(p->touch_moved_point.x - p->touch_began_point.x) >= 10
                                 && fabsf(p->touch_moved_point.y - p->touch_began_point.y) <= 10) {
-                                struct nview *target = __find_intercept_horizontal_view(p);
+                                struct native_view *target = __find_intercept_horizontal_view(p);
                                 if(target) {
-                                        nview_touch_cancelled(p, liv);
+                                        native_view_touch_cancelled(p, liv);
                                         p->intercept_horizontal_target    = target;
-                                        nview_touch_began(target, nview_convert_point_to_view(p, p->touch_began_point, target));
+                                        native_view_touch_began(target, native_view_convert_point_to_view(p, p->touch_began_point, target));
                                         goto finish;
                                 }
                         }
@@ -553,227 +554,233 @@ void nview_touch_moved(struct nview *p, union vec2 liv)
 finish:;
 }
 
-void nview_touch_ended(struct nview *p, union vec2 liv)
+void native_view_touch_ended(struct native_view *p, union vec2 liv)
 {
         p->touch_offset = vec2_sub(liv, p->touch_moved_point);
         p->touch_ended_point = liv;
 
-        struct nview *intercept_vertical_target = p->intercept_vertical_target;
-        struct nview *intercept_horizontal_target = p->intercept_horizontal_target;
+        struct native_view *intercept_vertical_target = p->intercept_vertical_target;
+        struct native_view *intercept_horizontal_target = p->intercept_horizontal_target;
         p->intercept_vertical_target    = NULL;
         p->intercept_horizontal_target  = NULL;
 
         if(intercept_vertical_target) {
-                nview_touch_ended(intercept_vertical_target,
+                native_view_touch_ended(intercept_vertical_target,
                         vec2_add(intercept_vertical_target->touch_began_point,
                                 vec2_sub(p->touch_ended_point, p->touch_began_point)));
         } else if(intercept_horizontal_target){
-                nview_touch_ended(intercept_horizontal_target,
+                native_view_touch_ended(intercept_horizontal_target,
                         vec2_add(intercept_horizontal_target->touch_began_point,
                                 vec2_sub(p->touch_ended_point, p->touch_began_point)));
         } else {
                 switch (p->type) {
                         case NATIVE_UI_LISTVIEW:
-                                nview_list_view_touch_ended(p, liv);
+                                native_view_list_view_touch_ended(p, liv);
                                 break;
                         default:
                                 break;
                 }
                 if(p->touch_ended_delegate) {
-                        p->touch_ended_delegate(p, 0, liv);
+                        p->touch_ended_delegate(p, p->touch_data, 0, liv);
                 }
                 if(p->parser_touch_handle) {
-                        ntouch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_ENDED);
+                        native_touch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_ENDED);
                 }
         }
 }
 
-void nview_touch_cancelled(struct nview *p, union vec2 liv)
+void native_view_touch_cancelled(struct native_view *p, union vec2 liv)
 {
         p->touch_offset = vec2_sub(liv, p->touch_moved_point);
         p->touch_ended_point = liv;
 
-        struct nview *intercept_vertical_target = p->intercept_vertical_target;
-        struct nview *intercept_horizontal_target = p->intercept_horizontal_target;
+        struct native_view *intercept_vertical_target = p->intercept_vertical_target;
+        struct native_view *intercept_horizontal_target = p->intercept_horizontal_target;
         p->intercept_vertical_target    = NULL;
         p->intercept_horizontal_target  = NULL;
 
         if(intercept_vertical_target) {
-                nview_touch_cancelled(intercept_vertical_target,
+                native_view_touch_cancelled(intercept_vertical_target,
                         vec2_add(intercept_vertical_target->touch_began_point,
                                 vec2_sub(p->touch_ended_point, p->touch_began_point)));
         } else if(intercept_horizontal_target){
-                nview_touch_cancelled(intercept_horizontal_target,
+                native_view_touch_cancelled(intercept_horizontal_target,
                         vec2_add(intercept_horizontal_target->touch_began_point,
                                 vec2_sub(p->touch_ended_point, p->touch_began_point)));
         } else {
                 p->touch_ended_point = liv;
                 switch (p->type) {
                         case NATIVE_UI_LISTVIEW:
-                                nview_list_view_touch_cancelled(p, liv);
+                                native_view_list_view_touch_cancelled(p, liv);
                                 break;
                         default:
                                 break;
                 }
                 if(p->touch_cancelled_delegate) {
-                        p->touch_cancelled_delegate(p, 0, liv);
+                        p->touch_cancelled_delegate(p, p->touch_data, 0, liv);
                 }
                 if(p->parser_touch_handle) {
-                        ntouch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_CANCELLED);
+                        native_touch_run(p->parser_touch_handle, p, NATIVE_UI_TOUCH_CANCELLED);
                 }
         }
 }
 
-void nview_text_done(struct nview *p)
+void native_view_text_done(struct native_view *p)
 {
         if(p->text_done_delegate) {
                 p->text_done_delegate(p);
         }
 }
 
-void nview_set_touch_began_delegate(struct nview *p, nexec_tbeganf delegate)
+void native_view_set_touch_data(struct native_view *p, void *touch_data, void(*touch_data_free)(void*))
+{
+        p->touch_data = touch_data;
+        p->touch_data_free = touch_data_free;
+}
+
+void native_view_set_touch_began_delegate(struct native_view *p, native_controller_tbeganf delegate)
 {
         p->touch_began_delegate         = delegate;
 }
 
-void nview_set_touch_moved_delegate(struct nview *p, nexec_tmovedf delegate)
+void native_view_set_touch_moved_delegate(struct native_view *p, native_controller_tmovedf delegate)
 {
         p->touch_moved_delegate         = delegate;
 }
-void nview_set_touch_ended_delegate(struct nview *p, nexec_tendedf delegate)
+void native_view_set_touch_ended_delegate(struct native_view *p, native_controller_tendedf delegate)
 {
         p->touch_ended_delegate         = delegate;
 }
 
-void nview_set_touch_cancelled_delegate(struct nview *p, nexec_tcancelledf delegate)
+void native_view_set_touch_cancelled_delegate(struct native_view *p, native_controller_tcancelledf delegate)
 {
         p->touch_cancelled_delegate     = delegate;
 }
 
-void nview_set_text_done_delegate(struct nview *p, nexec_txtf delegate)
+void native_view_set_text_done_delegate(struct native_view *p, native_controller_txtf delegate)
 {
         p->text_done_delegate           = delegate;
 }
 
-void nview_clear_all_actions(struct nview *p)
+void native_view_clear_all_actions(struct native_view *p)
 {
         naction_key_clear(&p->action_key);
 }
 
-static void __nview_on_action_margin(struct nview *p)
+static void __native_view_on_action_margin(struct native_view *p)
 {
-        nview_request_margin(p, p->align->margin);
+        native_view_request_margin(p, p->align->margin);
 }
 
-static void __nview_on_action_position(struct nview *p)
+static void __native_view_on_action_position(struct native_view *p)
 {
-        nview_request_position(p, p->position);
+        native_view_request_position(p, p->position);
 }
 
-static void __nview_on_action_scale(struct nview *p)
+static void __native_view_on_action_scale(struct native_view *p)
 {
-        nview_request_scale(p, p->scale);
+        native_view_request_scale(p, p->scale);
 }
 
-static void __nview_on_action_rotation(struct nview *p)
+static void __native_view_on_action_rotation(struct native_view *p)
 {
-        nview_request_rotation(p, p->rotation);
+        native_view_request_rotation(p, p->rotation);
 }
 
-static void __nview_on_action_alpha(struct nview *p)
+static void __native_view_on_action_alpha(struct native_view *p)
 {
-        nview_set_alpha(p, p->alpha);
+        native_view_set_alpha(p, p->alpha);
 }
 
-struct naction *nview_margin_to(struct nview *p, union vec4 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_margin_to(struct native_view *p, union vec4 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->align->margin,
                 vec4_sub(v, p->align->margin),
-                duration, ease, repeat, (nactionf)__nview_on_action_margin, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_margin, p);
 }
 
-struct naction *nview_margin_by(struct nview *p, union vec4 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_margin_by(struct native_view *p, union vec4 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->align->margin, v,
-                duration, ease, repeat, (nactionf)__nview_on_action_margin, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_margin, p);
 }
 
-struct naction *nview_move_to(struct nview *p, union vec2 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_move_to(struct native_view *p, union vec2 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->position_expanded,
                 vec4_sub((union vec4){v.x, v.y, 0.0, 0.0}, p->position_expanded),
-                duration, ease, repeat, (nactionf)__nview_on_action_position, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_position, p);
 }
 
-struct naction *nview_move_by(struct nview *p, union vec2 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_move_by(struct native_view *p, union vec2 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->position_expanded, (union vec4){v.x, v.y, 0.0, 0.0},
-                duration, ease, repeat, (nactionf)__nview_on_action_position, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_position, p);
 }
 
-struct naction *nview_scale_to(struct nview *p, union vec2 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_scale_to(struct native_view *p, union vec2 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->scale_expanded,
                 vec4_sub((union vec4){v.x, v.y, 0.0, 0.0}, p->scale_expanded),
-                duration, ease, repeat, (nactionf)__nview_on_action_scale, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_scale, p);
 }
 
-struct naction *nview_scale_by(struct nview *p, union vec2 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_scale_by(struct native_view *p, union vec2 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->scale_expanded, (union vec4){v.x, v.y, 0.0, 0.0},
-                duration, ease, repeat, (nactionf)__nview_on_action_scale, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_scale, p);
 }
 
-struct naction *nview_rotate_by(struct nview *p, union vec3 v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_rotate_by(struct native_view *p, union vec3 v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->rotation_expanded, (union vec4){v.x, v.y, v.z, 0.0},
-                duration, ease, repeat, (nactionf)__nview_on_action_rotation, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_rotation, p);
 }
 
-struct naction *nview_alpha_to(struct nview *p, float v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_alpha_to(struct native_view *p, float v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->alpha_expanded,
                 vec4_sub((union vec4){v, 0.0, 0.0, 0.0}, p->alpha_expanded),
-                duration, ease, repeat, (nactionf)__nview_on_action_alpha, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_alpha, p);
 }
 
-struct naction *nview_alpha_by(struct nview *p, float v, float duration, u8 ease, i16 repeat)
+struct naction *native_view_alpha_by(struct native_view *p, float v, float duration, u8 ease, i16 repeat)
 {
         return naction_alloc(&p->alpha_expanded, (union vec4){v, 0.0, 0.0, 0.0},
-                duration, ease, repeat, (nactionf)__nview_on_action_alpha, p);
+                duration, ease, repeat, (nactionf)__native_view_on_action_alpha, p);
 }
 
-struct naction *nview_delay(struct nview *p, float duration)
+struct naction *native_view_delay(struct native_view *p, float duration)
 {
         return naction_alloc_delay(&p->position_expanded, duration, NULL, NULL);
 }
 
-static void __show(struct nview *p)
+static void __show(struct native_view *p)
 {
-        nview_set_visible(p, 1);
+        native_view_set_visible(p, 1);
 }
 
-static void __hide(struct nview *p)
+static void __hide(struct native_view *p)
 {
-        nview_set_visible(p, 0);
+        native_view_set_visible(p, 0);
 }
 
-struct naction *nview_show(struct nview *p)
+struct naction *native_view_show(struct native_view *p)
 {
-        return nview_callback(p, __show, p);
+        return native_view_callback(p, __show, p);
 }
 
-struct naction *nview_hide(struct nview *p)
+struct naction *native_view_hide(struct native_view *p)
 {
-        return nview_callback(p, __hide, p);
+        return native_view_callback(p, __hide, p);
 }
 
-struct naction *nview_callback(struct nview *p, nactionf callback, void *callback_data)
+struct naction *native_view_callback(struct native_view *p, nactionf callback, void *callback_data)
 {
         return naction_alloc_callback(&p->position_expanded, callback, callback_data);
 }
 
-void nview_run_action(struct nview *p, ...)
+void native_view_run_action(struct native_view *p, ...)
 {
         va_list parg;
         va_start(parg, p);
@@ -784,12 +791,12 @@ void nview_run_action(struct nview *p, ...)
         }
         va_end(parg);
 
-        nmanager_add_action_key(nmanager_shared(), &p->action_key);
+        native_manager_add_action_key(native_manager_shared(), &p->action_key);
 }
 
-union vec2 nview_get_screen_pos(struct nview *p, union vec2 point)
+union vec2 native_view_get_screen_pos(struct native_view *p, union vec2 point)
 {
-        struct nview *r = p;
+        struct native_view *r = p;
         while(r) {
                 point.x += r->position.x - r->anchor.x * r->size.width;
                 point.y += r->position.y - r->anchor.y * r->size.height;

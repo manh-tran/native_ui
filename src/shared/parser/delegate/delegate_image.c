@@ -23,7 +23,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-struct nview *parser_image(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_image(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
         char *src = NULL;
 
@@ -36,7 +36,8 @@ struct nview *parser_image(struct xml_element *e, struct nparser *parser, struct
                 }
         }
 
-        struct nview *p = nview_alloc();
-        nview_show_image(p, src ? src : "");
+        struct native_view *p = native_view_alloc();
+        native_view_show_image(p, src ? src : "");
+        native_view_set_clip(p, 1);
         return p;
 }

@@ -24,23 +24,23 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_touch(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_touch(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         if(strcmp(a->value->ptr, "true") == 0
         	|| strcmp(a->value->ptr, "TRUE") == 0
         	|| strcmp(a->value->ptr, "YES") == 0) {
-        	nview_set_user_interaction_enabled(v, 1);
+        	native_view_set_user_interaction_enabled(v, 1);
         } else {
-        	nview_set_user_interaction_enabled(v, 0);
+        	native_view_set_user_interaction_enabled(v, 0);
         }
 }
 
-void parse_common_touch_delegate(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_touch_delegate(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
-        struct nparser *root = p;
+        struct native_parser *root = p;
         while(root) {
-                struct ntouch *handle = map_get(root->hash_touches,
-                        struct ntouch *, qskey(a->value));
+                struct native_touch *handle = map_get(root->hash_touches,
+                        struct native_touch *, qskey(a->value));
                 if(handle) {
                         v->parser_touch_handle = handle;
                         break;
@@ -50,7 +50,7 @@ void parse_common_touch_delegate(struct nview *v, struct xml_attribute *a, struc
         //
         // if(!handle) {
         //         handle = map_get(parent->hash_touches,
-        //                 struct ntouch *, qskey(a->value));
+        //                 struct native_touch *, qskey(a->value));
         // }
         // if(handle) v->parser_touch_handle = handle;
 }

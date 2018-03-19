@@ -18,17 +18,17 @@
 #include <cherry/math/math.h>
 #include <cherry/stdio.h>
 
-void nlyt_exec_update_relative(struct nlyt_exec *p)
+void native_layout_update_relative(struct native_layout *p)
 {
         if(list_singular(&p->head)) return;
 
-        struct nview *view       = (struct nview *)
-                ((char *)p->head.next - offsetof(struct nview, layout_controller));
+        struct native_view *view       = (struct native_view *)
+                ((char *)p->head.next - offsetof(struct native_view, layout_controller));
 
         struct list_head *head;
         list_for_each_secure(head, &view->children, {
-                struct nview *child = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
+                struct native_view *child = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
 
                 /*
                  * reset child size
@@ -74,14 +74,14 @@ void nlyt_exec_update_relative(struct nlyt_exec *p)
 
                 }
 
-                nview_set_size(child, size);
+                native_view_set_size(child, size);
 
                 if(child->update & NATIVE_UI_UPDATE_CHILDREN) 
                 {
-                        nview_update_layout(child);
+                        native_view_update_layout(child);
                         size = child->size;
                 }
-                nview_update_label(child);
+                native_view_update_label(child);
                 size = child->size;
                 /*
                  * resert size position
@@ -120,7 +120,7 @@ void nlyt_exec_update_relative(struct nlyt_exec *p)
                 position.x -= child->align->margin.right;
                 position.y += child->align->margin.top;
                 position.y -= child->align->margin.bottom;
-                nview_set_position(child, position);
+                native_view_set_position(child, position);
         });
 
         view->update = 0;

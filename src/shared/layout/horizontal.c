@@ -17,20 +17,20 @@
 #include <cherry/list.h>
 #include <cherry/math/math.h>
 
-void nlyt_exec_update_horizontal(struct nlyt_exec *p)
+void native_layout_update_horizontal(struct native_layout *p)
 {
         if(list_singular(&p->head)) return;
 
-        struct nview *view       = (struct nview *)
-                ((char *)p->head.next - offsetof(struct nview, layout_controller));
+        struct native_view *view       = (struct native_view *)
+                ((char *)p->head.next - offsetof(struct native_view, layout_controller));
 
         struct list_head *head;
         union vec2 position = (union vec2){0, 0};
         view->bound                        = (union vec2){0, 0};
 
         list_for_each_secure(head, &view->children, {
-                struct nview *child = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
+                struct native_view *child = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
 
                 /*
                  * reset child size
@@ -59,6 +59,9 @@ void nlyt_exec_update_horizontal(struct nlyt_exec *p)
                  */
                 if(child->type == NATIVE_UI_IMAGE) {
                         switch (child->align->size_width) {
+                                case NATIVE_UI_SIZE_EQUAL:
+                                        size.width = size.height;
+                                        break;
                                 case NATIVE_UI_SIZE_WRAP_CONTENT:
                                         if(child->align->fixed_height != 0)
                                                 size.width = child->align->fixed_width / child->align->fixed_height * size.height;
@@ -77,11 +80,11 @@ void nlyt_exec_update_horizontal(struct nlyt_exec *p)
 
                 }
 
-                nview_set_size(child, size);
+                native_view_set_size(child, size);
 
-                if(child->update & NATIVE_UI_UPDATE_CHILDREN) 
+                if(child->update & NATIVE_UI_UPDATE_CHILDREN)
                 {
-                        nview_update_layout(child);
+                        native_view_update_layout(child);
                         size = child->size;
                 }
 
@@ -101,7 +104,7 @@ void nlyt_exec_update_horizontal(struct nlyt_exec *p)
                 }
                 position.x += child->align->margin.left;
                 position.y += child->align->margin.top;
-                nview_set_position(child, vec2_add(view->offset_child, position));
+                native_view_set_position(child, vec2_add(view->offset_child, position));
 
                 position.x += child->align->margin.right;
                 position.x += size.width * (1.0f - child->anchor.x);

@@ -36,21 +36,21 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-pthread_mutex_t         __shared_nview_touch_lock;
+pthread_mutex_t         __shared_native_view_touch_lock;
 
-struct nview *nview_alloc()
+struct native_view *native_view_alloc()
 {
-        struct nview *p           = smalloc(sizeof(struct nview), nview_free);
-        nview_init(p);
+        struct native_view *p           = smalloc(sizeof(struct native_view), native_view_free);
+        native_view_init(p);
 
         p->ptr                          = NULL;
-        nview_show_view(p);
+        native_view_show_view(p);
         return p;
 }
 
-void nview_free(struct nview *p)
+void native_view_free(struct native_view *p)
 {
-        nview_free_common(p);
+        native_view_free_common(p);
         /*
          * deallocate view content
          */
@@ -66,7 +66,7 @@ void nview_free(struct nview *p)
 /*
  * show views
  */
-static void __change_view(struct nview *p, UIView *new_view)
+static void __change_view(struct native_view *p, UIView *new_view)
 {
         if(p->ptr) {
                 UIView *view            = (__bridge id)(p->ptr);
@@ -85,68 +85,68 @@ static void __change_view(struct nview *p, UIView *new_view)
         [new_view setMultipleTouchEnabled:NO];
 }
 
-void nview_show_view(struct nview *p)
+void native_view_show_view(struct native_view *p)
 {
         p->type                 = NATIVE_UI_VIEW;
         CustomView *view        = [[CustomView alloc] init];
         view.native_ptr        = p;
         __change_view(p, view);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_label(struct nview *p)
+void native_view_show_label(struct native_view *p)
 {
         p->type                 = NATIVE_UI_LABEL;
         CustomLabel *view       = [[CustomLabel alloc] init];
         view.native_ptr         = p;
         __change_view(p, view);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
-        nview_on_change_label(p);
+        native_view_on_change_label(p);
 }
 
-void nview_show_image(struct nview *p, char *path)
+void native_view_show_image(struct native_view *p, char *path)
 {
         p->type                 = NATIVE_UI_IMAGE;
         CustomImageView *view   = [[CustomImageView alloc] init];
         view.native_ptr         = p;
         __change_view(p, view);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
-        nview_on_change_imageview(p, path);
+        native_view_on_change_imageview(p, path);
 }
 
-void nview_show_textfield(struct nview *p)
+void native_view_show_textfield(struct native_view *p)
 {
         p->type                 = NATIVE_UI_TEXTFIELD;
 
@@ -158,19 +158,19 @@ void nview_show_textfield(struct nview *p)
         text.allowsEditingTextAttributes = TRUE;
         __change_view(p, text);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_textview(struct nview *p)
+void native_view_show_textview(struct native_view *p)
 {
         p->type                 = NATIVE_UI_TEXTVIEW;
 
@@ -180,43 +180,43 @@ void nview_show_textview(struct nview *p)
         text.allowsEditingTextAttributes = TRUE;
         __change_view(p, text);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_listview(struct nview *p)
+void native_view_show_listview(struct native_view *p)
 {
         p->type                 = NATIVE_UI_LISTVIEW;
         CustomView *view        = [[CustomView alloc] init];
         view.native_ptr        = p;
         __change_view(p, view);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
-        nview_on_change_listview(p);
+        native_view_on_change_listview(p);
 }
 
 /*
  * parent child
  */
-void nview_add_child(struct nview *p, struct nview *c)
+void native_view_add_child(struct native_view *p, struct native_view *c)
 {
         if(c->parent && c->parent->name_to_child) {
                 map_remove_key(c->parent->name_to_child, qskey(c->name));
@@ -228,7 +228,7 @@ void nview_add_child(struct nview *p, struct nview *c)
 
         if(c->name->len) {
                 if(!p->name_to_child) {
-                        p->name_to_child = map_alloc(sizeof(struct nview *));
+                        p->name_to_child = map_alloc(sizeof(struct native_view *));
                         map_set(p->name_to_child, qskey(c->name), &c);
                 }
         }
@@ -240,7 +240,7 @@ void nview_add_child(struct nview *p, struct nview *c)
         [parent addSubview:child];
 }
 
-void nview_remove_from_parent(struct nview *p)
+void native_view_remove_from_parent(struct native_view *p)
 {
         if(!p->parent) return;
 
@@ -259,7 +259,7 @@ void nview_remove_from_parent(struct nview *p)
 /*
  * set transform
  */
-static void __reset_transform(struct nview *p)
+static void __reset_transform(struct native_view *p)
 {
         UIView *view                    = (__bridge id)(p->ptr);
 
@@ -292,7 +292,7 @@ static void __reset_transform(struct nview *p)
 
 }
 
-void nview_set_position(struct nview *p, union vec2 position)
+void native_view_set_position(struct native_view *p, union vec2 position)
 {
         p->position     = position;
 
@@ -305,7 +305,7 @@ void nview_set_position(struct nview *p, union vec2 position)
 
 }
 
-void nview_set_size(struct nview *p, union vec2 size)
+void native_view_set_size(struct native_view *p, union vec2 size)
 {
         p->size         = size;
         UIView *view    = (__bridge id)(p->ptr);
@@ -316,21 +316,21 @@ void nview_set_size(struct nview *p, union vec2 size)
         view.bounds     = newFrame;
 }
 
-void nview_set_scale(struct nview *p, union vec2 scale)
+void native_view_set_scale(struct native_view *p, union vec2 scale)
 {
         p->scale                        = scale;
 
         __reset_transform(p);
 }
 
-void nview_set_rotation(struct nview *p, union vec3 rotation)
+void native_view_set_rotation(struct native_view *p, union vec3 rotation)
 {
         p->rotation                     = rotation;
 
         __reset_transform(p);
 }
 
-void nview_set_anchor(struct nview *p, union vec2 anchor)
+void native_view_set_anchor(struct native_view *p, union vec2 anchor)
 {
         p->anchor                       = anchor;
 
@@ -339,7 +339,7 @@ void nview_set_anchor(struct nview *p, union vec2 anchor)
         view.layer.anchorPoint          = CGPointMake(anchor.x, anchor.y);
 }
 
-void nview_set_color(struct nview *p, union vec4 *color, union vec4 *border)
+void native_view_set_color(struct native_view *p, union vec4 *color, union vec4 *border)
 {
         if(color) {
                 if(!p->color) {
@@ -395,7 +395,7 @@ void nview_set_color(struct nview *p, union vec4 *color, union vec4 *border)
         }
 }
 
-void nview_set_visible(struct nview *p, u8 visible)
+void native_view_set_visible(struct native_view *p, u8 visible)
 {
         p->visible = visible;
 
@@ -404,7 +404,7 @@ void nview_set_visible(struct nview *p, u8 visible)
         [view setHidden:visible == 1 ? NO : YES];
 }
 
-void nview_set_alpha(struct nview *p, float alpha)
+void native_view_set_alpha(struct native_view *p, float alpha)
 {
         p->alpha                        = alpha;
 
@@ -412,7 +412,7 @@ void nview_set_alpha(struct nview *p, float alpha)
         [view setAlpha:alpha];
 }
 
-void nview_set_clip(struct nview *p, u8 clip)
+void native_view_set_clip(struct native_view *p, u8 clip)
 {
         p->clip                         = clip;
         UIView *view                    = (__bridge id)(p->ptr);
@@ -431,14 +431,14 @@ void nview_set_clip(struct nview *p, u8 clip)
 /*
  * touches
  */
-void nview_set_user_interaction_enabled(struct nview *p, u8 enabled)
+void native_view_set_user_interaction_enabled(struct native_view *p, u8 enabled)
 {
         p->user_interaction_enabled     = enabled;
         UIView *view                    = (__bridge id)(p->ptr);
         view.userInteractionEnabled     = enabled;
 }
 
-union vec2 nview_convert_point_to_view(struct nview *from, union vec2 point, struct nview *to)
+union vec2 native_view_convert_point_to_view(struct native_view *from, union vec2 point, struct native_view *to)
 {
         UIView *from_view       = (__bridge id)(from->ptr);
         UIView *to_view         = (__bridge id)(to->ptr);

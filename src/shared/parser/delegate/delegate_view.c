@@ -24,8 +24,8 @@
 #include <cherry/stdio.h>
 #include <cherry/xml/xml.h>
 
-struct nview *parser_view(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_view(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
-        struct nview *p = nview_alloc();
+        struct native_view *p = native_view_alloc();
         return p;
 }

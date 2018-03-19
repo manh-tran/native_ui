@@ -20,11 +20,11 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-struct nview_align *nview_align_alloc();
+struct native_view_align *native_view_align_alloc();
 
-void nview_align_free(struct nview_align *p);
+void native_view_align_free(struct native_view_align *p);
 
-void nview_align_set_type(struct nview_align *p, u64 type);
+void native_view_align_set_type(struct native_view_align *p, u64 type);
 
 #ifdef __cplusplus
 }

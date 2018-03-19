@@ -23,19 +23,19 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_type(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_type(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         if(strcmp(a->value->ptr, "relative") == 0) {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_RELATIVE);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_RELATIVE);
         } else if(strcmp(a->value->ptr, "vertical") == 0) {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_VERTICAL);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_VERTICAL);
         } else if(strcmp(a->value->ptr, "horizontal") == 0) {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_HORIZONTAL);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_HORIZONTAL);
         } else if(strcmp(a->value->ptr, "size_vertical") == 0) {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_SIZE_VERTICAL);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_SIZE_VERTICAL);
         } else if(strcmp(a->value->ptr, "size_horizontal") == 0) {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_SIZE_HORIZONTAL);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_SIZE_HORIZONTAL);
         } else {
-                nview_set_layout_type(v, NATIVE_UI_LAYOUT_ABSOLUTE);
+                native_view_set_layout_type(v, NATIVE_UI_LAYOUT_ABSOLUTE);
         }
 }

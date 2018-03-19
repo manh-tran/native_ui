@@ -16,9 +16,9 @@
 #include <cherry/list.h>
 #include <cherry/stdio.h>
 
-struct ntouch *ntouch_alloc()
+struct native_touch *native_touch_alloc()
 {
-        struct ntouch *p      = smalloc(sizeof(struct ntouch), ntouch_free);
+        struct native_touch *p      = smalloc(sizeof(struct native_touch), native_touch_free);
         INIT_LIST_HEAD(&p->children);
         INIT_LIST_HEAD(&p->head);
         p->parent                               = NULL;
@@ -29,7 +29,7 @@ struct ntouch *ntouch_alloc()
         return p;
 }
 
-void ntouch_free(struct ntouch *p)
+void native_touch_free(struct native_touch *p)
 {
         if(p->execute >= 1) {
                 p->execute = 2;
@@ -37,10 +37,10 @@ void ntouch_free(struct ntouch *p)
         }
         struct list_head *head;
         list_while_not_singular(head, &p->children) {
-                struct ntouch *child = (struct ntouch *)
-                        ((char *)head - offsetof(struct ntouch, head));
+                struct native_touch *child = (struct native_touch *)
+                        ((char *)head - offsetof(struct native_touch, head));
                 list_del_init(head);
-                ntouch_free(child);
+                native_touch_free(child);
         }
         list_del_init(&p->head);
         if(p->custom_data && p->custom_data_free) {
@@ -49,7 +49,7 @@ void ntouch_free(struct ntouch *p)
         sfree(p);
 }
 
-void ntouch_set_f(struct ntouch *p, ntouchf delegate,
+void native_touch_set_delegate(struct native_touch *p, native_touch_delegate delegate,
         void *custom_data, custom_data_free_delegate free_delegate)
 {
         if(p->custom_data && p->custom_data_free) {
@@ -60,9 +60,9 @@ void ntouch_set_f(struct ntouch *p, ntouchf delegate,
         p->touch_delegate       = delegate;
 }
 
-void ntouch_run(struct ntouch *p, void *sender, u8 type)
+void native_touch_run(struct native_touch *p, void *sender, u8 type)
 {
-        struct ntouch *handle = p;
+        struct native_touch *handle = p;
         while(handle) {
                 handle->execute = 1;
                 if(handle->touch_delegate) {
@@ -70,7 +70,7 @@ void ntouch_run(struct ntouch *p, void *sender, u8 type)
                 }
                 if(handle->execute > 1) {
                         handle->execute = 0;
-                        ntouch_free(handle);
+                        native_touch_free(handle);
                         return;
                 }
                 handle->execute = 0;
@@ -78,7 +78,7 @@ void ntouch_run(struct ntouch *p, void *sender, u8 type)
         }
 }
 
-void ntouch_link(struct ntouch *p, struct ntouch *c)
+void native_touch_link(struct native_touch *p, struct native_touch *c)
 {
         list_del(&c->head);
         list_add_tail(&c->head, &p->children);

@@ -22,7 +22,7 @@ extern "C" {
 
 @interface CustomTextField : UITextField<UITextFieldDelegate>
 
-@property struct nview *native_ptr;
+@property struct native_view *native_ptr;
 
 @end
 

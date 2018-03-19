@@ -23,15 +23,15 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-struct nview *parser_textfield(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_textfield(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
         struct xml_attribute *placeholder = xml_find_attribute(e, "placeholder");
 
-        struct nview *p = nview_alloc();
-        nview_show_textfield(p);
+        struct native_view *p = native_view_alloc();
+        native_view_show_textfield(p);
 
         if(placeholder) {
-                nview_set_text_placeholder(p, placeholder->value->ptr, placeholder->value->len);
+                native_view_set_text_placeholder(p, placeholder->value->ptr, placeholder->value->len);
         }
 
         return p;

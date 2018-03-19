@@ -20,25 +20,25 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-typedef struct nexec *(*nexec_afnf)(char *, size_t);
+typedef struct native_controller *(*native_controller_afnf)(char *, size_t);
 
-struct nexec *nexec_alloc_fn(char *name, size_t len);
+struct native_controller *native_controller_alloc_fn(char *name, size_t len);
 
-void nexec_set_fnf(nexec_afnf delegate);
+void native_controller_set_fnf(native_controller_afnf delegate);
 
-struct nexec *nexec_alloc();
+struct native_controller *native_controller_alloc();
 
-void nexec_free(struct nexec *p);
+void native_controller_free(struct native_controller *p);
 
-void nexec_link(struct nexec *p, struct nexec *c);
+void native_controller_link(struct native_controller *p, struct native_controller *c);
 
-void nexec_set_view(struct nexec *p, struct nview *v);
+void native_controller_set_view(struct native_controller *p, struct native_view *v);
 
-struct nview *nexec_get_view(struct nexec *p);
+struct native_view *native_controller_get_view(struct native_controller *p);
 
-void nexec_reg(struct nexec *p, char *key, size_t len, int count, ntaskf delegate);
+void native_controller_register_task(struct native_controller *p, char *key, size_t len, int count, native_task_delegate delegate);
 
-void nexec_unreg(struct nexec *p, char *key, size_t len);
+void native_controller_unreg(struct native_controller *p, char *key, size_t len);
 
 
 #ifdef __cplusplus

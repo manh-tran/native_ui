@@ -73,7 +73,7 @@ static void __setup()
         }
 }
 
-void nview_on_change_imageview(struct nview *p, char *path)
+void native_view_on_change_imageview(struct native_view *p, char *path)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
@@ -86,7 +86,7 @@ void nview_on_change_imageview(struct nview *p, char *path)
         p->custom_data                                  = image_view_data_alloc(path);
         p->custom_data_free                             = image_view_data_free;
 
-        struct nview_image_view_data *data        = (struct nview_image_view_data *)p->custom_data;
+        struct native_view_image_view_data *data        = (struct native_view_image_view_data *)p->custom_data;
         jstring jpath = (*__jni_env)->NewStringUTF(__jni_env, data->path->ptr);
         (*__jni_env)->CallStaticVoidMethod(__jni_env, __class,
                 __static_method_set_bitmap, p->ptr, jpath);

@@ -23,13 +23,13 @@ extern "C" {
 
 UIView *custom_his_test(UIView *current, CGPoint point, UIEvent *event);
 
-void util_touch_began(struct nview *p, union vec2 liv);
+void util_touch_began(struct native_view *p, union vec2 liv);
 
-void util_touch_moved(struct nview *p, union vec2 liv);
+void util_touch_moved(struct native_view *p, union vec2 liv);
 
-void util_touch_ended(struct nview *p, union vec2 liv);
+void util_touch_ended(struct native_view *p, union vec2 liv);
 
-void util_touch_cancelled(struct nview *p, union vec2 liv);
+void util_touch_cancelled(struct native_view *p, union vec2 liv);
 
 #ifdef __cplusplus
 }

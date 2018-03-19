@@ -54,7 +54,7 @@
 
         if(vy > y) {
                 [UIView animateWithDuration:0.3 animations:^{
-                        nview_set_position(__root, (union vec2){__root->size.width/2, __root->size.height/2 - (vy - y)});
+                        native_view_set_position(__root, (union vec2){__root->size.width/2, __root->size.height/2 - (vy - y)});
                 }];
         }
 }
@@ -64,7 +64,7 @@
         if(!open) return;
 
         [UIView animateWithDuration:0.3 animations:^{
-                nview_set_position(__root, (union vec2){__root->size.width/2, __root->size.height/2});
+                native_view_set_position(__root, (union vec2){__root->size.width/2, __root->size.height/2});
 
         }];
 }

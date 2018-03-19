@@ -30,8 +30,8 @@
 #include "common_delegate/delegate.h"
 #include "end_delegate/delegate.h"
 
-typedef struct nview *(*view_parse_delegate)(struct xml_element *, struct nparser *, struct nparser *);
-typedef void(*view_parse_common_delegate)(struct nview *, struct xml_attribute *, struct nparser *, struct nparser *);
+typedef struct native_view *(*view_parse_delegate)(struct xml_element *, struct native_parser *, struct native_parser *);
+typedef void(*view_parse_common_delegate)(struct native_view *, struct xml_attribute *, struct native_parser *, struct native_parser *);
 
 static struct map *__parse_function                     = NULL;
 static struct map *__parse_end_function                 = NULL;
@@ -113,27 +113,29 @@ static void __init()
                 map_set(__parse_common_function, qlkey("intercept_horizontal"), &(view_parse_common_delegate){parse_common_intercept_horizontal});
                 map_set(__parse_common_function, qlkey("anchor_x"), &(view_parse_common_delegate){parse_common_anchor_x});
                 map_set(__parse_common_function, qlkey("anchor_y"), &(view_parse_common_delegate){parse_common_anchor_y});
+                map_set(__parse_common_function, qlkey("weights"), &(view_parse_common_delegate){parse_common_weights});
+                map_set(__parse_common_function, qlkey("weight"), &(view_parse_common_delegate){parse_common_weight});
         }
 }
 
-void __nview_hash_head_free(struct list_head *p)
+void __native_view_hash_head_free(struct list_head *p)
 {
         if(!list_singular(p)) {
-                struct nview *view = (struct nview *)
-                        ((char *)p->next - offsetof(struct nview, hash_head));
+                struct native_view *view = (struct native_view *)
+                        ((char *)p->next - offsetof(struct native_view, hash_head));
                 list_del_init(p);
-                nview_free(view);
+                native_view_free(view);
         }
         sfree(p);
 }
 
-struct nparser *nparser_alloc()
+struct native_parser *native_parser_alloc()
 {
         __init();
-        struct nparser *p    = smalloc(sizeof(struct nparser), nparser_free);
+        struct native_parser *p    = smalloc(sizeof(struct native_parser), native_parser_free);
         INIT_LIST_HEAD(&p->view);
         p->hash_views                   = map_alloc(sizeof(struct list_head *));
-        p->hash_touches                 = map_alloc(sizeof(struct ntouch *));
+        p->hash_touches                 = map_alloc(sizeof(struct native_touch *));
         p->hash_templates               = map_alloc(sizeof(struct xml_element *));
         p->controller                   = NULL;
         p->template_scope               = 0;
@@ -141,58 +143,59 @@ struct nparser *nparser_alloc()
         return p;
 }
 
-void nparser_free(struct nparser *p)
+void native_parser_free(struct native_parser *p)
 {
-        map_deep_free(p->hash_views, struct list_head *, __nview_hash_head_free);
-        map_deep_free(p->hash_touches, struct ntouch *, ntouch_free);
+        map_deep_free(p->hash_views, struct list_head *, __native_view_hash_head_free);
+        map_deep_free(p->hash_touches, struct native_touch *, native_touch_free);
         map_free(p->hash_templates);
         if(!list_singular(&p->view)) {
-                struct nview *view = (struct nview *)
-                        ((char *)p->view.next - offsetof(struct nview, parser));
+                struct native_view *view = (struct native_view *)
+                        ((char *)p->view.next - offsetof(struct native_view, parser));
                 list_del_init(p->view.next);
-                nview_free(view);
+                native_view_free(view);
         }
         list_del_init(&p->view);
         sfree(p);
 }
 
-struct nview *nparser_get_hash_view(struct nparser *p, char *key, size_t len)
+struct native_view *native_parser_get_hash_view(struct native_parser *p, char *key, size_t len)
 {
         if(map_has_key(p->hash_views, key, len)) {
                 struct list_head *head = map_get(p->hash_views, struct list_head *, key, len);
                 if(!list_singular(head)) {
-                        struct nview *view = (struct nview *)
-                                ((char *)head->next - offsetof(struct nview, hash_head));
+                        struct native_view *view = (struct native_view *)
+                                ((char *)head->next - offsetof(struct native_view, hash_head));
                         return view;
                 }
         }
         return NULL;
 }
 
-struct ntouch *nparser_get_touch(struct nparser *p, char *key, size_t len)
+struct native_touch *native_parser_get_touch(struct native_parser *p, char *key, size_t len)
 {
-        return map_get(p->hash_touches, struct ntouch *, key, len);
+        return map_get(p->hash_touches, struct native_touch *, key, len);
 }
 
-void nparser_parse_file(struct nparser *p, char *file, struct nparser *parent)
+void native_parser_parse_file(struct native_parser *p, char *file, struct native_parser *parent)
 {
         p->parent = parent;
-        int type                = nfile_type(file);
+        // int type                = nfile_type(file);
         struct string *xml_key  = string_alloc_chars(file, strlen(file));
-        string_cat_int(xml_key, type);
+        // string_cat_int(xml_key, type);
 
         if( ! map_has_key(__xml_cache, qskey(xml_key))) {
-                struct xml_element *xml         = xml_parse(file, type);
+                // struct xml_element *xml         = xml_parse(file, type);
+                struct xml_element *xml = xml_parse(file);
                 map_set(__xml_cache, qskey(xml_key), &xml);
         }
 
         struct xml_element *root                = map_get(__xml_cache, struct xml_element *, qskey(xml_key));
         string_free(xml_key);
 
-        struct nview *current_view        = NULL;
+        struct native_view *current_view        = NULL;
 
         struct list_head *head = &root->element_head;
-        struct nview *v = NULL;
+        struct native_view *v = NULL;
         while(head) {
                 /*
                  * reset temp view
@@ -216,11 +219,11 @@ void nparser_parse_file(struct nparser *p, char *file, struct nparser *parent)
                 }
                 if(v) {
                         if(current_view) {
-                                nview_add_child(current_view, v);
+                                native_view_add_child(current_view, v);
                         } else {
                             current_view = v;
                             if(p->controller) {
-                                    nexec_set_view(p->controller, v);
+                                    native_controller_set_view(p->controller, v);
                             }
                         }
                 }
@@ -236,15 +239,15 @@ void nparser_parse_file(struct nparser *p, char *file, struct nparser *parent)
                         }
                 }
                 if(v) {
-                        nview_set_anchor(v, v->anchor);
-                        nview_set_position(v, v->position);
-                        nview_set_size(v, (union vec2){v->align->fixed_width, v->align->fixed_height});
-                        nview_set_scale(v, v->scale);
-                        nview_set_rotation(v, v->rotation);
-                        nview_set_clip(v, v->clip);
-                        nview_set_alpha(v, v->alpha);
-                        nview_set_color(v, v->color, v->border_color);
-                        nview_set_visible(v, v->visible);
+                        native_view_set_anchor(v, v->anchor);
+                        native_view_set_position(v, v->position);
+                        native_view_set_size(v, (union vec2){v->align->fixed_width, v->align->fixed_height});
+                        native_view_set_scale(v, v->scale);
+                        native_view_set_rotation(v, v->rotation);
+                        native_view_set_clip(v, v->clip);
+                        native_view_set_alpha(v, v->alpha);
+                        native_view_set_color(v, v->color, v->border_color);
+                        native_view_set_visible(v, v->visible);
 
                 }
                 /*
@@ -308,14 +311,14 @@ void nparser_parse_file(struct nparser *p, char *file, struct nparser *parent)
         }
 }
 
-void nparser_parse_template(struct nparser *p, struct nparser *parent, char *key, size_t len)
+void native_parser_parse_template(struct native_parser *p, struct native_parser *parent, char *key, size_t len)
 {
         p->parent = parent;
         struct xml_element *root = map_get(parent->hash_templates, struct xml_element *, key, len);
-        struct nview *current_view        = NULL;
+        struct native_view *current_view        = NULL;
 
         struct list_head *head = &root->element_head;
-        struct nview *v = NULL;
+        struct native_view *v = NULL;
         while(head) {
                 /*
                  * reset temp view
@@ -337,14 +340,14 @@ void nparser_parse_template(struct nparser *p, struct nparser *parent, char *key
                 }
                 if(v) {
                         if(current_view) {
-                                nview_add_child(current_view, v);
+                                native_view_add_child(current_view, v);
                         } else {
                             current_view = v;
                             if(p->controller) {
-                                    nexec_set_view(p->controller, v);
+                                    native_controller_set_view(p->controller, v);
                             }
                             if(p->controller && parent->controller) {
-                                    nexec_link(parent->controller, p->controller);
+                                    native_controller_link(parent->controller, p->controller);
                             }
                         }
                 }
@@ -360,15 +363,15 @@ void nparser_parse_template(struct nparser *p, struct nparser *parent, char *key
                         }
                 }
                 if(v) {
-                        nview_set_position(v, v->position);
-                        nview_set_size(v, (union vec2){v->align->fixed_width, v->align->fixed_height});
-                        nview_set_scale(v, v->scale);
-                        nview_set_rotation(v, v->rotation);
-                        nview_set_clip(v, v->clip);
-                        nview_set_alpha(v, v->alpha);
-                        nview_set_color(v, v->color, v->border_color);
-                        nview_set_anchor(v, v->anchor);
-                        nview_set_visible(v, v->visible);
+                        native_view_set_position(v, v->position);
+                        native_view_set_size(v, (union vec2){v->align->fixed_width, v->align->fixed_height});
+                        native_view_set_scale(v, v->scale);
+                        native_view_set_rotation(v, v->rotation);
+                        native_view_set_clip(v, v->clip);
+                        native_view_set_alpha(v, v->alpha);
+                        native_view_set_color(v, v->color, v->border_color);
+                        native_view_set_anchor(v, v->anchor);
+                        native_view_set_visible(v, v->visible);
                 }
                 /*
                  * invalidate head for next check
@@ -431,10 +434,10 @@ void nparser_parse_template(struct nparser *p, struct nparser *parent, char *key
         }
 }
 
-struct nview *nparser_get_view(struct nparser *p)
+struct native_view *native_parser_get_view(struct native_parser *p)
 {
         if( ! list_singular(&p->view)) {
-                return (struct nview *)((char *)p->view.next - offsetof(struct nview, parser));
+                return (struct native_view *)((char *)p->view.next - offsetof(struct native_view, parser));
         }
         return NULL;
 }

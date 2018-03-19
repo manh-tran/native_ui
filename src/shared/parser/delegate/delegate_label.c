@@ -77,12 +77,12 @@ static union vec4 parse_color(struct string *p)
         return result;
 }
 
-struct nview *parser_label(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_label(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
-    struct nview *p = nview_alloc();
+    struct native_view *p = native_view_alloc();
 
-    nview_show_label(p);
-    nview_set_text(p, qskey(e->value));
+    native_view_show_label(p);
+    native_view_set_text(p, qskey(e->value));
 
     struct xml_attribute *font = xml_find_attribute(e, "font");
     struct xml_attribute *font_size = xml_find_attribute(e, "font_size");
@@ -92,20 +92,20 @@ struct nview *parser_label(struct xml_element *e, struct nparser *parser, struct
 
     if(font && font_size) {
             float size = (float)satof(font_size->value->ptr);
-            nview_set_font(p, qskey(font->value), size);
+            native_view_set_font(p, qskey(font->value), size);
     } else if(font) {
-            nview_set_font(p, qskey(font->value), 14);
+            native_view_set_font(p, qskey(font->value), 14);
     }
 
     if(text_align) {
             if(strcmp(text_align->value->ptr, "left") == 0 || strcmp(text_align->value->ptr, "LEFT") == 0) {
-                    nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
+                    native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
             } else if(strcmp(text_align->value->ptr, "right") == 0 || strcmp(text_align->value->ptr, "RIGHT") == 0) {
-                    nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_RIGHT);
+                    native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_RIGHT);
             } else if(strcmp(text_align->value->ptr, "center") == 0 || strcmp(text_align->value->ptr, "CENTER") == 0) {
-                    nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_CENTER);
+                    native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_CENTER);
             } else if(strcmp(text_align->value->ptr, "justified") == 0 || strcmp(text_align->value->ptr, "JUSTIFIED") == 0) {
-                    nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_JUSTIFIED);
+                    native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_JUSTIFIED);
             }
     }
 
@@ -114,12 +114,12 @@ struct nview *parser_label(struct xml_element *e, struct nparser *parser, struct
                 || strcmp(multiline->value->ptr, "TRUE") == 0
                 || strcmp(multiline->value->ptr, "yes") == 0
                 || strcmp(multiline->value->ptr, "YES") == 0) {
-                    nview_set_text_multiline(p, 1);
+                    native_view_set_text_multiline(p, 1);
             }
     }
 
     if(text_color) {
-            nview_set_text_color(p, parse_color(text_color->value));
+            native_view_set_text_color(p, parse_color(text_color->value));
     }
 
     return p;

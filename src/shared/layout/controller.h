@@ -20,17 +20,17 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-void nlyt_exec_update_absolute(struct nlyt_exec *p);
+void native_layout_update_absolute(struct native_layout *p);
 
-void nlyt_exec_update_relative(struct nlyt_exec *p);
+void native_layout_update_relative(struct native_layout *p);
 
-void nlyt_exec_update_vertical(struct nlyt_exec *p);
+void native_layout_update_vertical(struct native_layout *p);
 
-void nlyt_exec_update_horizontal(struct nlyt_exec *p);
+void native_layout_update_horizontal(struct native_layout *p);
 
-void nlyt_exec_update_size_vertical(struct nlyt_exec *p);
+void native_layout_update_size_vertical(struct native_layout *p);
 
-void nlyt_exec_update_size_horizontal(struct nlyt_exec *p);
+void native_layout_update_size_horizontal(struct native_layout *p);
 
 #ifdef __cplusplus
 }

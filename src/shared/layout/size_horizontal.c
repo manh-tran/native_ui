@@ -16,13 +16,14 @@
 #include <native_ui/view_layout_controller.h>
 #include <cherry/list.h>
 #include <cherry/math/math.h>
+#include <cherry/stdio.h>
 
-void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
+void native_layout_update_size_horizontal(struct native_layout *p)
 {
         if(list_singular(&p->head)) return;
 
-        struct nview *view       = (struct nview *)
-                ((char *)p->head.next - offsetof(struct nview, layout_controller));
+        struct native_view *view       = (struct native_view *)
+                ((char *)p->head.next - offsetof(struct native_view, layout_controller));
 
         struct list_head *head;
         union vec2 position             = (union vec2){0, 0};
@@ -32,8 +33,8 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
         int fill_count                  = 0;
 
         list_for_each_secure(head, &view->children, {
-                struct nview *child = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
+                struct native_view *child = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
 
                 switch (child->align->size_height) {
                         case NATIVE_UI_SIZE_MATCH_PARENT:
@@ -47,11 +48,11 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
                         case NATIVE_UI_SIZE_MATCH_PARENT:
                                 child->size.width  = view->size.width;
                                 child->size.width -= child->align->padding.left + child->align->padding.right;
-                                nview_set_size(child, child->size);
+                                native_view_set_size(child, child->size);
 
                                 if(child->update & NATIVE_UI_UPDATE_CHILDREN)
                                 {
-                                        nview_update_layout(child);
+                                        native_view_update_layout(child);
                                 }
 
                                 remain_width -= child->size.width;
@@ -61,14 +62,18 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
                         case NATIVE_UI_SIZE_FIXED:
                                 child->size.width  = child->align->fixed_width;
                                 child->size.width -= child->align->padding.left + child->align->padding.right;
-                                nview_set_size(child, child->size);
+                                native_view_set_size(child, child->size);
 
                                 if(child->update & NATIVE_UI_UPDATE_CHILDREN)
                                 {
-                                        nview_update_layout(child);
+                                        native_view_update_layout(child);
                                 }
 
                                 remain_width -= child->size.width;
+                                remain_width -= child->align->margin.left;
+                                remain_width -= child->align->margin.right;
+                                break;
+                        case NATIVE_UI_SIZE_WEIGHT:
                                 remain_width -= child->align->margin.left;
                                 remain_width -= child->align->margin.right;
                                 break;
@@ -76,8 +81,6 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
                                 fill_count++;
                                 remain_width -= child->align->margin.left;
                                 remain_width -= child->align->margin.right;
-                                remain_width += child->align->padding.left;
-                                remain_width += child->align->padding.right;
                                 break;
                 }
 
@@ -89,8 +92,8 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
         }
 
         list_for_each_secure(head, &view->children, {
-                struct nview *child = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
+                struct native_view *child = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
 
                 switch (child->align->size_width) {
                         case NATIVE_UI_SIZE_FIXED:
@@ -100,25 +103,86 @@ void nlyt_exec_update_size_horizontal(struct nlyt_exec *p)
                                 position.x += child->align->margin.left;
                                 position.y += child->align->margin.top;
                                 position.y -= child->align->margin.bottom;
-                                nview_set_position(child, position);
+                                native_view_set_position(child, position);
                                 position.x += child->size.width * (1.0f - child->anchor.x);
                                 position.x += child->align->margin.right;
                                 break;
-                        case NATIVE_UI_SIZE_FILL:
-                                child->align->fixed_width       = fill_width;
-                                child->size.width               = fill_width;
-                                nview_set_size(child, child->size);
+                        case NATIVE_UI_SIZE_WEIGHT:
+                                child->size.width               = remain_width * child->align->weight / view->weights;
+                                if(child->type == NATIVE_UI_IMAGE) {
+                                        child->size.width -= child->align->padding.left + child->align->padding.right;
+                                        switch (child->align->size_height) {
+                                                case NATIVE_UI_SIZE_EQUAL:
+                                                        child->size.height = child->size.width;
+                                                        break;
+                                                case NATIVE_UI_SIZE_WRAP_CONTENT:
+                                                        if(child->align->fixed_width != 0)
+                                                                child->size.height = child->align->fixed_height / child->align->fixed_width * child->size.width;
+                                                        else
+                                                                child->size.height = 0;
+                                                        break;
+                                                default:
+                                                        child->size.height -= child->align->padding.top + child->align->padding.bottom;
+                                                        break;
+                                        }
+                                } else {
+                                        child->size.width -= child->align->padding.left + child->align->padding.right;
+                                        child->align->fixed_width      = child->size.width;
+                                }
+
+                                native_view_set_size(child, child->size);
                                 if(child->update & NATIVE_UI_UPDATE_CHILDREN)
                                 {
-                                        nview_update_layout(child);
+                                        native_view_update_layout(child);
                                 }
                                 position.y = view->size.height / 2  + child->size.height * (child->anchor.y - 0.5f);
-                                position.x += fill_width * child->anchor.x;
+                                position.x += child->size.width * child->anchor.x;
                                 position.x += child->align->margin.left;
+                                position.x += child->align->padding.left;
                                 position.y += child->align->margin.top;
                                 position.y -= child->align->margin.bottom;
-                                nview_set_position(child, position);
-                                position.x += fill_width * (1.0f - child->anchor.x);
+                                native_view_set_position(child, position);
+                                position.x += child->size.width * (1.0f - child->anchor.x);
+                                position.x += child->align->margin.right;
+                                position.x += child->align->padding.right;
+                                break;
+                        case NATIVE_UI_SIZE_FILL:
+                                child->size.width               = fill_width;
+                                if(child->type == NATIVE_UI_IMAGE) {
+                                        child->size.width -= child->align->padding.left + child->align->padding.right;
+                                        switch (child->align->size_height) {
+                                                case NATIVE_UI_SIZE_EQUAL:
+                                                        child->size.height = child->size.width;
+                                                        break;
+                                                case NATIVE_UI_SIZE_WRAP_CONTENT:
+                                                        if(child->align->fixed_width != 0)
+                                                                child->size.height = child->align->fixed_height / child->align->fixed_width * child->size.width;
+                                                        else
+                                                                child->size.height = 0;
+                                                        break;
+                                                default:
+                                                        child->size.height -= child->align->padding.top + child->align->padding.bottom;
+                                                        break;
+                                        }
+                                } else {
+                                        child->size.width -= child->align->padding.left + child->align->padding.right;
+                                        child->align->fixed_width      = fill_width;
+                                }
+
+                                native_view_set_size(child, child->size);
+                                if(child->update & NATIVE_UI_UPDATE_CHILDREN)
+                                {
+                                        native_view_update_layout(child);
+                                }
+                                position.y = view->size.height / 2  + child->size.height * (child->anchor.y - 0.5f);
+                                position.x += child->size.width * child->anchor.x;
+                                position.x += child->align->margin.left;
+                                position.x += child->align->padding.left;
+                                position.y += child->align->margin.top;
+                                position.y -= child->align->margin.bottom;
+                                native_view_set_position(child, position);
+                                position.x += child->size.width * (1.0f - child->anchor.x);
+                                position.x += child->align->padding.right;
                                 position.x += child->align->margin.right;
                                 break;
                 }

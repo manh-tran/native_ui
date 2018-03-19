@@ -24,7 +24,7 @@
 #include <cherry/stdio.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_scale(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_scale(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->scale.x = v->scale.y   = (float)satof(a->value->ptr);
         debug("scale %f %f\n", v->scale.x, v->scale.y);

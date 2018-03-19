@@ -20,11 +20,11 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-struct nlyt_exec *nlyt_exec_alloc();
+struct native_layout *native_layout_alloc();
 
-void nlyt_exec_free(struct nlyt_exec *p);
+void native_layout_free(struct native_layout *p);
 
-void nlyt_exec_update(struct nlyt_exec *p);
+void native_layout_update(struct native_layout *p);
 
 #ifdef __cplusplus
 }

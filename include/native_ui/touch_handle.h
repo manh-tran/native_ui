@@ -20,15 +20,15 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-struct ntouch *ntouch_alloc();
+struct native_touch *native_touch_alloc();
 
-void ntouch_free(struct ntouch *p);
+void native_touch_free(struct native_touch *p);
 
-void ntouch_set_f(struct ntouch *p, ntouchf delegate, void *custom_data, custom_data_free_delegate free_delegate);
+void native_touch_set_delegate(struct native_touch *p, native_touch_delegate delegate, void *custom_data, custom_data_free_delegate free_delegate);
 
-void ntouch_run(struct ntouch *p, void *sender, u8 type);
+void native_touch_run(struct native_touch *p, void *sender, u8 type);
 
-void ntouch_link(struct ntouch *p, struct ntouch *c);
+void native_touch_link(struct native_touch *p, struct native_touch *c);
 
 #ifdef __cplusplus
 }

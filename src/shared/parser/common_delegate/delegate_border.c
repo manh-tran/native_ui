@@ -24,7 +24,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_border(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_border(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         if(a->value->len && a->value->ptr[0] == '#') {
                 if(a->value->len == 7) {
@@ -39,7 +39,7 @@ void parse_common_border(struct nview *v, struct xml_attribute *a, struct nparse
                         buf[0] = a->value->ptr[5];
                         buf[1] = a->value->ptr[6];
                         int b = strtol(buf, NULL, 16);
-                        nview_set_color(v, v->color, &(union vec4){
+                        native_view_set_color(v, v->color, &(union vec4){
                                 r / 255.0f,
                                 g / 255.0f,
                                 b / 255.0f,
@@ -60,7 +60,7 @@ void parse_common_border(struct nview *v, struct xml_attribute *a, struct nparse
                         buf[0] = a->value->ptr[7];
                         buf[1] = a->value->ptr[8];
                         int a = strtol(buf, NULL, 16);
-                        nview_set_color(v, v->color, &(union vec4){
+                        native_view_set_color(v, v->color, &(union vec4){
                                 r / 255.0f,
                                 g / 255.0f,
                                 b / 255.0f,

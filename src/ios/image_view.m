@@ -31,7 +31,7 @@
 #import <cherry/math/math.h>
 #import "custom/imageview.h"
 
-void nview_on_change_imageview(struct nview *p, char *path)
+void native_view_on_change_imageview(struct native_view *p, char *path)
 {
         if(p->custom_data && p->custom_data_free) {
                 p->custom_data_free(p->custom_data);
@@ -44,11 +44,17 @@ void nview_on_change_imageview(struct nview *p, char *path)
 
         CustomImageView *view                           = (__bridge id)(p->ptr);
 
-        struct nview_image_view_data *data        = (struct nview_image_view_data *)p->custom_data;
+        struct native_view_image_view_data *data        = (struct native_view_image_view_data *)p->custom_data;
         struct nimage *image                   = nimage_get_image(&data->image_link);
 
         UIImage *im                                     = (__bridge id)(image->ptr);
         [view setImage:im];
+
+        [view setContentMode:UIViewContentModeScaleAspectFill];
+        [view setClipsToBounds:YES];
+
+        p->align->fixed_width                   = im.size.width;
+        p->align->fixed_height                  = im.size.height;
         // view.image                                      = im;
 }
 

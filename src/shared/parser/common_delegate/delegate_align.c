@@ -24,7 +24,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_align(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_align(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         struct array *split = array_alloc(sizeof(struct string *), ORDERED);
         string_split(a->value, "|", split);

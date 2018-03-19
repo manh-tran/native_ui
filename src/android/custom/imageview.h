@@ -11,8 +11,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#ifndef __nview_ANDROID_CUSTOM_IMAGE_VIEW_H__
-#define __nview_ANDROID_CUSTOM_IMAGE_VIEW_H__
+#ifndef __native_view_ANDROID_CUSTOM_IMAGE_VIEW_H__
+#define __native_view_ANDROID_CUSTOM_IMAGE_VIEW_H__
 
 #ifdef __cplusplus
 extern "C" {

@@ -23,22 +23,22 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_margin_top(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_margin_top(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->margin.top    = (float)satof(a->value->ptr);
 }
 
-void parse_common_margin_left(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_margin_left(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->margin.left   = (float)satof(a->value->ptr);
 }
 
-void parse_common_margin_bottom(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_margin_bottom(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->margin.bottom = (float)satof(a->value->ptr);
 }
 
-void parse_common_margin_right(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_margin_right(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->margin.right  = (float)satof(a->value->ptr);
 }

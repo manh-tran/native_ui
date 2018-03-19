@@ -22,9 +22,9 @@ extern "C" {
 #include <cherry/math/types.h>
 #include <pthread.h>
 
-struct nview;
-struct nexec;
-struct ntouch;
+struct native_view;
+struct native_controller;
+struct native_touch;
 
 #define INNER_PATH "res/"
 #define LOCAL_PATH "local/"
@@ -37,7 +37,7 @@ struct npref
 };
 
 #if OS == IOS
-        extern struct nview *__root;
+        extern struct native_view *__root;
 #endif
 
 #if OS == DROID
@@ -55,13 +55,13 @@ typedef void(*user_data_free_delegate)(void*);
 /*
  * native ui manager
  */
-typedef void(*ntaskf)(void *, float);
+typedef void(*native_task_delegate)(void *, float);
 
-struct ntask {
+struct native_task {
         struct list_head                head;
         struct list_head                user_head;
         void                            *data;
-        ntaskf  delegate;
+        native_task_delegate  delegate;
         int                             count;
 };
 
@@ -177,7 +177,7 @@ struct naction_key {
 /*
  * manager
  */
-struct nmanager {
+struct native_manager {
         struct list_head                update_tasks;
         struct list_head                action_keys;
         struct list_head                touches;
@@ -186,20 +186,20 @@ struct nmanager {
 /*
  * native controller
  */
-typedef void(*nexec_olf)(struct nexec *);
-typedef void(*nexec_orf)(struct nexec *);
-typedef void(*nexec_ouf)(struct nexec *, float);
-struct nexec
+typedef void(*native_controller_olf)(struct native_controller *);
+typedef void(*native_controller_orf)(struct native_controller *);
+typedef void(*native_controller_ouf)(struct native_controller *, float);
+struct native_controller
 {
         struct list_head                                view;
 
         struct list_head                                children;
         struct list_head                                head;
-        struct nexec                   *parent;
+        struct native_controller                   *parent;
 
-        nexec_olf       on_linked;
-        nexec_orf      on_removed;
-        nexec_ouf       on_update;
+        native_controller_olf       on_linked;
+        native_controller_orf      on_removed;
+        native_controller_ouf       on_update;
 
         /*
          * schedule tasks
@@ -208,6 +208,8 @@ struct nexec
 
         void                                            *custom_data;
         custom_data_free_delegate                       custom_data_free;
+
+        struct pool_list_head   anonymous;
 };
 
 /*
@@ -223,11 +225,11 @@ enum {
         NATIVE_UI_PAGEVIEW
 };
 
-typedef void(*nexec_tbeganf)(struct nview *, int index, union vec2);
-typedef void(*nexec_tmovedf)(struct nview *, int index, union vec2);
-typedef void(*nexec_tendedf)(struct nview *, int index, union vec2);
-typedef void(*nexec_tcancelledf)(struct nview *, int index, union vec2);
-typedef void(*nexec_txtf)(struct nview *);
+typedef void(*native_controller_tbeganf)(struct native_view *, void* data, int index, union vec2);
+typedef void(*native_controller_tmovedf)(struct native_view *, void* data, int index, union vec2);
+typedef void(*native_controller_tendedf)(struct native_view *, void* data, int index, union vec2);
+typedef void(*native_controller_tcancelledf)(struct native_view *, void* data, int index, union vec2);
+typedef void(*native_controller_txtf)(struct native_view *);
 
 enum {
         NATIVE_UI_LAYOUT_RELATIVE,
@@ -238,7 +240,7 @@ enum {
         NATIVE_UI_LAYOUT_SIZE_HORIZONTAL
 };
 
-struct nlyt_exec {
+struct native_layout {
         u8                      type;
         struct list_head        head;
 };
@@ -269,10 +271,12 @@ enum {
         NATIVE_UI_SIZE_MATCH_PARENT     = 1,
         NATIVE_UI_SIZE_WRAP_CONTENT     = 2,
         NATIVE_UI_SIZE_FIXED            = 3,
-        NATIVE_UI_SIZE_FILL             = 4
+        NATIVE_UI_SIZE_FILL             = 4,
+        NATIVE_UI_SIZE_EQUAL            = 5,
+        NATIVE_UI_SIZE_WEIGHT           = 6
 };
 
-struct nview_align {
+struct native_view_align {
         u64                                     type;
         u8                                      size_width;
         u8                                      size_height;
@@ -284,11 +288,12 @@ struct nview_align {
                 float                           fixed_height;
                 float                           percent_height;
         };
+        int                                     weight;
         union vec4                              margin;
         union vec4                              padding;
 };
 
-struct nview {
+struct native_view {
         int                                     type;
 #if OS == IOS
         void                                    *ptr;
@@ -306,7 +311,7 @@ struct nview {
          */
         struct list_head                        head;
         struct list_head                        children;
-        struct nview                      *parent;
+        struct native_view                      *parent;
 
         struct map                              *name_to_child;
 
@@ -314,7 +319,7 @@ struct nview {
          * layout controller
          */
         struct list_head                        layout_controller;
-        struct nview_align                      *align;
+        struct native_view_align                *align;
         u32                                     update;
 
         /*
@@ -354,16 +359,17 @@ struct nview {
         union vec4                              clip_rounds;
         struct string                           *name;
         u8                                      visible;
+        float                                   weights;
 
         /*
          * touch
          */
         u8                                      user_interaction_enabled;
-        nexec_tbeganf        touch_began_delegate;
-        nexec_tmovedf        touch_moved_delegate;
-        nexec_tendedf        touch_ended_delegate;
-        nexec_tcancelledf    touch_cancelled_delegate;
-        nexec_txtf          text_done_delegate;
+        native_controller_tbeganf               touch_began_delegate;
+        native_controller_tmovedf               touch_moved_delegate;
+        native_controller_tendedf               touch_ended_delegate;
+        native_controller_tcancelledf           touch_cancelled_delegate;
+        native_controller_txtf                  text_done_delegate;
 
         union vec2                              touch_began_point;
         union vec2                              touch_moved_point;
@@ -385,6 +391,9 @@ struct nview {
         void                                    *user_data;
         user_data_free_delegate                 user_data_free;
 
+        void                                    *touch_data;
+        void(*touch_data_free)(void *);
+
         /*
          * schedule tasks
          */
@@ -393,37 +402,37 @@ struct nview {
         /*
          * parser touch delegates
          */
-        struct ntouch         *parser_touch_handle;
+        struct native_touch                     *parser_touch_handle;
 
         struct list_head                        intercept_horizontal;
         struct list_head                        intercept_horizontal_head;
-        struct nview                      *intercept_horizontal_target;
+        struct native_view                      *intercept_horizontal_target;
 
         struct list_head                        intercept_vertical;
         struct list_head                        intercept_vertical_head;
-        struct nview                      *intercept_vertical_target;
+        struct native_view                      *intercept_vertical_target;
 
         /*
          * action key
          */
-        struct naction_key             action_key;
+        struct naction_key                      action_key;
 
         struct list_head                        touch_list;
 };
 
-extern pthread_mutex_t  __shared_nview_touch_lock;
+extern pthread_mutex_t  __shared_native_view_touch_lock;
 
-struct nview_touch_data
+struct native_view_touch_data
 {
         struct list_head        shared_head;
         struct list_head        head;
-        struct nview            *view;
+        struct native_view            *view;
         u8                      type;
         union vec2              point;
         union vec2              pscr;
 };
 
-struct nview_list_view_data {
+struct native_view_list_view_data {
         u8                                      hold;
         u8                                      bouncing;
         u8                                      stop;
@@ -433,7 +442,7 @@ struct nview_list_view_data {
         union vec2                              last_moved_point;
 };
 
-struct nview_page_view_data {
+struct native_view_page_view_data {
         u8                                      hold;
         u8                                      bouncing;
         u8                                      stop;
@@ -443,7 +452,7 @@ struct nview_page_view_data {
         union vec2                              last_moved_point;
 };
 
-struct nview_image_view_data {
+struct native_view_image_view_data {
         struct list_head        image_link;
         struct string           *path;
 };
@@ -463,7 +472,7 @@ enum {
         NATIVE_UI_LABEL_ALIGN_JUSTIFIED
 };
 
-struct nview_label_data {
+struct native_view_label_data {
         struct string           *text;
         u8                      multi_line;
         struct native_ui_font   *font;
@@ -481,51 +490,51 @@ enum {
         NATIVE_UI_TOUCH_CANCELLED
 };
 
-typedef void(*ntouchf)(void*, void*, u8);
-struct ntouch {
+typedef void(*native_touch_delegate)(void*, void*, u8);
+struct native_touch {
 
         struct list_head                        children;
         struct list_head                        head;
-        struct ntouch         *parent;
+        struct native_touch         *parent;
 
-        ntouchf       touch_delegate;
+        native_touch_delegate       touch_delegate;
         void                                    *custom_data;
         custom_data_free_delegate               custom_data_free;
 
         u8                                      execute;
 };
 
-struct nparser {
+struct native_parser {
         struct list_head                        view;
 
         struct map                              *hash_views;
         struct map                              *hash_touches;
         struct map                              *hash_templates;
 
-        struct nexec           *controller;
+        struct native_controller           *controller;
 
-        struct nparser               *parent;
+        struct native_parser               *parent;
 
         int                                     template_scope;
 };
 
-#define controller_get_viewf1(a) nexec_get_view(a)
-#define controller_get_viewf2(a, b) struct nview *a = nexec_get_view(b)
+#define controller_get_viewf1(a) native_controller_get_view(a)
+#define controller_get_viewf2(a, b) struct native_view *a = native_controller_get_view(b)
 #define controller_get_viewGET_MACRO(_1,_2,NAME,...) NAME
 #define controller_get_view(...) controller_get_viewGET_MACRO(__VA_ARGS__,controller_get_viewf2,controller_get_viewf1)(__VA_ARGS__)
 
-#define view_get_parserf1(a) nview_get_parser(a)
-#define view_get_parserf2(a, b) struct nparser *a = nview_get_parser(b)
+#define view_get_parserf1(a) native_view_get_parser(a)
+#define view_get_parserf2(a, b) struct native_parser *a = native_view_get_parser(b)
 #define view_get_parserGET_MACRO(_1,_2,NAME,...) NAME
 #define view_get_parser(...) view_get_parserGET_MACRO(__VA_ARGS__,view_get_parserf2,view_get_parserf1)(__VA_ARGS__)
 
-#define parser_hash_viewf2(a, b, c) nparser_get_hash_view(a, b, c)
-#define parser_hash_viewf3(a, b, c, d) struct nview *a = nparser_get_hash_view(b, c, d)
+#define parser_hash_viewf2(a, b, c) native_parser_get_hash_view(a, b, c)
+#define parser_hash_viewf3(a, b, c, d) struct native_view *a = native_parser_get_hash_view(b, c, d)
 #define parser_hash_viewGET_MACRO(_1,_2,_3,_4,NAME,...) NAME
 #define parser_hash_view(...) parser_hash_viewGET_MACRO(__VA_ARGS__,parser_hash_viewf3,parser_hash_viewf2)(__VA_ARGS__)
 
 #define parser_get_viewf1(a) native_parser_get_view(a)
-#define parser_get_viewf2(a, b) struct nview *a = nparser_get_view(b)
+#define parser_get_viewf2(a, b) struct native_view *a = native_parser_get_view(b)
 #define parser_get_viewGET_MACRO(_1,_2,NAME,...) NAME
 #define parser_get_view(...) parser_get_viewGET_MACRO(__VA_ARGS__,parser_get_viewf2,parser_get_viewf1)(__VA_ARGS__)
 

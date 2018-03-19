@@ -23,22 +23,22 @@ extern "C" {
 /*
  * update task
  */
-struct ntask *ntask_alloc();
+struct native_task *native_task_alloc();
 
-void ntask_free(struct ntask *p);
+void native_task_free(struct native_task *p);
 
 /*
  * manager
  */
-struct nmanager *nmanager_shared();
+struct native_manager *native_manager_shared();
 
-struct nmanager *nmanager_alloc();
+struct native_manager *native_manager_alloc();
 
-void nmanager_free(struct nmanager *p);
+void native_manager_free(struct native_manager *p);
 
-void nmanager_update(struct nmanager *p, float delta);
+void native_manager_update(struct native_manager *p, float delta);
 
-void nmanager_add_action_key(struct nmanager *p, struct naction_key *key);
+void native_manager_add_action_key(struct native_manager *p, struct naction_key *key);
 
 #ifdef __cplusplus
 }

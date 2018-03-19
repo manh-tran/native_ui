@@ -24,7 +24,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_hash(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_hash(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         if(map_has_key(p->hash_views, qskey(a->value))) {
                 struct list_head *head = map_get(p->hash_views, struct list_head *, qskey(a->value));

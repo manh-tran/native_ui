@@ -107,7 +107,7 @@ static void __setup()
 }
 
 
-void nview_on_change_label(struct nview *p)
+void native_view_on_change_label(struct native_view *p)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
@@ -117,10 +117,10 @@ void nview_on_change_label(struct nview *p)
                 p->custom_data_free     = NULL;
         }
 
-        p->custom_data                          = nview_label_data_alloc();
-        p->custom_data_free                     = nview_label_data_free;
+        p->custom_data                          = native_view_label_data_alloc();
+        p->custom_data_free                     = native_view_label_data_free;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->font                              = native_ui_font_get(qlkey("arial"), 14);
 
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
@@ -130,17 +130,17 @@ void nview_on_change_label(struct nview *p)
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
                 __method_set_multi_line, data->multi_line);
 
-        nview_update_label(p);
-        nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
+        native_view_update_label(p);
+        native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
 }
 
-void nview_update_label(struct nview *p)
+void native_view_update_label(struct native_view *p)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
 
         /*
          * android layout does not update immediately so I can not get real size of inner label
@@ -155,7 +155,7 @@ void nview_update_label(struct nview *p)
                  size.width      = p->size.width;
                  size.height     = h;
 
-                 nview_set_size(p, size);
+                 native_view_set_size(p, size);
 
                  p->align->fixed_width                   = size.width;
                  p->align->fixed_height                  = h;
@@ -165,42 +165,42 @@ void nview_update_label(struct nview *p)
          }
 }
 
-void nview_set_text_align(struct nview *p, u8 text_align)
+void native_view_set_text_align(struct native_view *p, u8 text_align)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->align                             = text_align;
 
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
                 __method_set_text_alignment, (int)text_align);
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_text_multiline(struct nview *p, u8 multiline)
+void native_view_set_text_multiline(struct native_view *p, u8 multiline)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->multi_line = multiline;
 
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
                 __method_set_multi_line, data->multi_line);
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_text(struct nview *p, char *text, size_t len)
+void native_view_set_text(struct native_view *p, char *text, size_t len)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
 
         data->text->len                         = 0;
         string_cat(data->text, text, len);
@@ -210,35 +210,35 @@ void nview_set_text(struct nview *p, char *text, size_t len)
                 __method_set_text, jtext);
         (*__jni_env)->DeleteLocalRef(__jni_env, jtext);
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_text_color(struct nview *p, union vec4 color)
+void native_view_set_text_color(struct native_view *p, union vec4 color)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->color                             = color;
 
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
                 __method_set_text_color, color.r, color.g, color.b, color.a);
 }
 
-void nview_set_font(struct nview *p, char *font_name, size_t len, size_t size)
+void native_view_set_font(struct native_view *p, char *font_name, size_t len, size_t size)
 {
         JNIEnv *__jni_env = __jni_env_current_thread();
         __setup();
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->font->size                        = size;
 
         (*__jni_env)->CallVoidMethod(__jni_env, p->ptr,
                 __method_set_font_size, data->font->size);
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
 #endif

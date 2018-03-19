@@ -17,17 +17,17 @@
 #include <cherry/list.h>
 #include <cherry/math/math.h>
 
-void nlyt_exec_update_absolute(struct nlyt_exec *p)
+void native_layout_update_absolute(struct native_layout *p)
 {
         if(list_singular(&p->head)) return;
 
-        struct nview *view       = (struct nview *)
-                ((char *)p->head.next - offsetof(struct nview, layout_controller));
+        struct native_view *view       = (struct native_view *)
+                ((char *)p->head.next - offsetof(struct native_view, layout_controller));
 
         struct list_head *head;
         list_for_each_secure(head, &view->children, {
-                struct nview *child = (struct nview *)
-                        ((char *)head - offsetof(struct nview, head));
+                struct native_view *child = (struct native_view *)
+                        ((char *)head - offsetof(struct native_view, head));
 
                 /*
                  * reset child size
@@ -49,10 +49,10 @@ void nlyt_exec_update_absolute(struct nlyt_exec *p)
                 
                 size.width -= child->align->padding.left + child->align->padding.right;
                 size.height -= child->align->padding.top + child->align->padding.bottom;
-                nview_set_size(child, size);
+                native_view_set_size(child, size);
 
                 if(child->update & NATIVE_UI_UPDATE_CHILDREN) {
-                        nview_update_layout(child);
+                        native_view_update_layout(child);
                 }
         });
 

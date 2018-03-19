@@ -16,9 +16,9 @@
 #include <cherry/string.h>
 #include <cherry/math/math.h>
 
-struct nview_align *nview_align_alloc()
+struct native_view_align *native_view_align_alloc()
 {
-        struct nview_align *p     = smalloc(sizeof(struct nview_align), nview_align_free);
+        struct native_view_align *p     = smalloc(sizeof(struct native_view_align), native_view_align_free);
         p->type                         = 0;
         p->size_width                   = NATIVE_UI_SIZE_FIXED;
         p->size_height                  = NATIVE_UI_SIZE_FIXED;
@@ -29,12 +29,12 @@ struct nview_align *nview_align_alloc()
         return p;
 }
 
-void nview_align_free(struct nview_align *p)
+void native_view_align_free(struct native_view_align *p)
 {
         sfree(p);
 }
 
-void nview_align_set_type(struct nview_align *p, u64 type)
+void native_view_align_set_type(struct native_view_align *p, u64 type)
 {
         p->type = type;
 }

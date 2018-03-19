@@ -21,7 +21,7 @@ extern "C" {
 #include <native_ui/types.h>
 #include <cherry/xml/types.h>
 
-struct nview *parser_end_template(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_end_template(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
 #ifdef __cplusplus
 }

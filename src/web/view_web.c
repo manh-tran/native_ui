@@ -36,78 +36,78 @@
 #include <native_ui/manager.h>
 
 static int __init__ = 0;
-pthread_mutex_t __shared_nview_touch_lock;
+pthread_mutex_t __shared_native_view_touch_lock;
 static u8 __view_touched = 0;
 static u8 __view_touched_move = 0;
 static u8 __view_touched_end = 0;
 
 EMSCRIPTEN_KEEPALIVE
-void js_nview_touch_began(struct nview *v, float x, float y)
+void js_native_view_touch_began(struct native_view *v, float x, float y)
 {
         if(__view_touched || !v) return;
 
         __view_touched = 1;
-        struct nview_touch_data *data = nview_touch_data_alloc();
+        struct native_view_touch_data *data = native_view_touch_data_alloc();
         list_add_tail(&data->head, &v->touch_list);
-        list_add_tail(&data->shared_head, &nmanager_shared()->touches);
+        list_add_tail(&data->shared_head, &native_manager_shared()->touches);
         data->view = v;
         data->type = NATIVE_UI_TOUCH_BEGAN;
         data->point = (union vec2){x, y};
         data->pscr = (union vec2){0, 0};
 
-        // nview_touch_began(v, (union vec2){x, y});
+        // native_view_touch_began(v, (union vec2){x, y});
 }
 
 EMSCRIPTEN_KEEPALIVE
-void js_nview_touch_moved(struct nview *v, float x, float y)
+void js_native_view_touch_moved(struct native_view *v, float x, float y)
 {
         if(!__view_touched || !v) return;
-        struct nview_touch_data *data = nview_touch_data_alloc();
+        struct native_view_touch_data *data = native_view_touch_data_alloc();
         list_add_tail(&data->head, &v->touch_list);
-        list_add_tail(&data->shared_head, &nmanager_shared()->touches);
+        list_add_tail(&data->shared_head, &native_manager_shared()->touches);
         data->view = v;
         data->type = NATIVE_UI_TOUCH_MOVED;
         data->point = (union vec2){x, y};
         data->pscr = (union vec2){0, 0};
 
-        // nview_touch_moved(v, (union vec2){x, y});
+        // native_view_touch_moved(v, (union vec2){x, y});
 }
 
 EMSCRIPTEN_KEEPALIVE
-void js_nview_touch_ended(struct nview *v, float x, float y)
+void js_native_view_touch_ended(struct native_view *v, float x, float y)
 {
         if(!__view_touched || !v) return;
 
         if(__view_touched_end == 0) {
                 __view_touched_end = 1;
-                struct nview_touch_data *data = nview_touch_data_alloc();
+                struct native_view_touch_data *data = native_view_touch_data_alloc();
                 list_add_tail(&data->head, &v->touch_list);
-                list_add_tail(&data->shared_head, &nmanager_shared()->touches);
+                list_add_tail(&data->shared_head, &native_manager_shared()->touches);
                 data->view = v;
                 data->type = NATIVE_UI_TOUCH_ENDED;
                 data->point = (union vec2){x, y};
                 data->pscr = (union vec2){0, 0};
-                // nview_touch_ended(v, (union vec2){x, y});
+                // native_view_touch_ended(v, (union vec2){x, y});
         }
         __view_touched_end = 0;
         __view_touched = 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
-void js_nview_touch_cancelled(struct nview *v, float x, float y)
+void js_native_view_touch_cancelled(struct native_view *v, float x, float y)
 {
         if(!__view_touched || !v) return;
 
         if(__view_touched_end == 0) {
                 __view_touched_end = 1;
-                struct nview_touch_data *data = nview_touch_data_alloc();
+                struct native_view_touch_data *data = native_view_touch_data_alloc();
                 list_add_tail(&data->head, &v->touch_list);
-                list_add_tail(&data->shared_head, &nmanager_shared()->touches);
+                list_add_tail(&data->shared_head, &native_manager_shared()->touches);
                 data->view = v;
                 data->type = NATIVE_UI_TOUCH_CANCELLED;
                 data->point = (union vec2){x, y};
                 data->pscr = (union vec2){0, 0};
-                // nview_touch_cancelled(v, (union vec2){x, y});
+                // native_view_touch_cancelled(v, (union vec2){x, y});
         }
         __view_touched_end = 0;
         __view_touched = 0;
@@ -115,7 +115,7 @@ void js_nview_touch_cancelled(struct nview *v, float x, float y)
 
 static void __clear()
 {
-        pthread_mutex_destroy(&__shared_nview_touch_lock);
+        pthread_mutex_destroy(&__shared_native_view_touch_lock);
 }
 
 static void __setup()
@@ -123,25 +123,25 @@ static void __setup()
         if(!__init__) {
                 __init__ = 1;
                 cache_add(__clear);
-                pthread_mutex_init(&__shared_nview_touch_lock, NULL);
+                pthread_mutex_init(&__shared_native_view_touch_lock, NULL);
         }
 }
 
-struct nview *nview_alloc()
+struct native_view *native_view_alloc()
 {
         __setup();
-        struct nview *p           = smalloc(sizeof(struct nview), nview_free);
-        nview_init(p);
+        struct native_view *p           = smalloc(sizeof(struct native_view), native_view_free);
+        native_view_init(p);
 
         p->ptr                    = 0;
 
-        nview_show_view(p);
+        native_view_show_view(p);
         return p;
 }
 
-void nview_free(struct nview *p)
+void native_view_free(struct native_view *p)
 {
-        nview_free_common(p);
+        native_view_free_common(p);
         /*
          * deallocate view content
          */
@@ -153,7 +153,7 @@ void nview_free(struct nview *p)
         sfree(p);
 }
 
-static void __change_view(struct nview *p, i32 jsview)
+static void __change_view(struct native_view *p, i32 jsview)
 {
         if(p->ptr) {
                 EM_ASM_({
@@ -172,7 +172,7 @@ static void __change_view(struct nview *p, i32 jsview)
         }
 }
 
-void nview_show_view(struct nview *p)
+void native_view_show_view(struct native_view *p)
 {
         p->type                 = NATIVE_UI_VIEW;
 
@@ -184,19 +184,19 @@ void nview_show_view(struct nview *p)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_image(struct nview *p, char *path)
+void native_view_show_image(struct native_view *p, char *path)
 {
         p->type                 = NATIVE_UI_IMAGE;
         i32 np = (i32) EM_ASM_({
@@ -207,23 +207,23 @@ void nview_show_image(struct nview *p, char *path)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
         struct string *vpath = file_version_path(path);
-        nview_on_change_imageview(p, vpath->ptr);
+        native_view_on_change_imageview(p, vpath->ptr);
         string_free(vpath);
 }
 
-void nview_show_label(struct nview *p)
+void native_view_show_label(struct native_view *p)
 {
         p->type                 = NATIVE_UI_LABEL;
         i32 np = (i32) EM_ASM_({
@@ -234,21 +234,21 @@ void nview_show_label(struct nview *p)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
-        nview_on_change_label(p);
+        native_view_on_change_label(p);
 }
 
-void nview_show_textfield(struct nview *p)
+void native_view_show_textfield(struct native_view *p)
 {
         debug("show text field\n");
         p->type                 = NATIVE_UI_TEXTFIELD;
@@ -260,19 +260,19 @@ void nview_show_textfield(struct nview *p)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_textview(struct nview *p)
+void native_view_show_textview(struct native_view *p)
 {
         p->type                 = NATIVE_UI_TEXTVIEW;
         i32 np = (i32) EM_ASM_({
@@ -283,19 +283,19 @@ void nview_show_textview(struct nview *p)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 }
 
-void nview_show_listview(struct nview *p)
+void native_view_show_listview(struct native_view *p)
 {
         p->type                 = NATIVE_UI_LISTVIEW;
         i32 np = (i32) EM_ASM_({
@@ -306,21 +306,21 @@ void nview_show_listview(struct nview *p)
 
         __change_view(p, np);
 
-        nview_set_position(p, p->position);
-        nview_set_size(p, p->size);
-        nview_set_scale(p, p->scale);
-        nview_set_rotation(p, p->rotation);
-        nview_set_clip(p, p->clip);
-        nview_set_color(p, p->color, p->border_color);
-        nview_set_alpha(p, p->alpha);
-        nview_set_anchor(p, p->anchor);
-        nview_set_visible(p, p->visible);
-        nview_set_user_interaction_enabled(p, p->user_interaction_enabled);
+        native_view_set_position(p, p->position);
+        native_view_set_size(p, p->size);
+        native_view_set_scale(p, p->scale);
+        native_view_set_rotation(p, p->rotation);
+        native_view_set_clip(p, p->clip);
+        native_view_set_color(p, p->color, p->border_color);
+        native_view_set_alpha(p, p->alpha);
+        native_view_set_anchor(p, p->anchor);
+        native_view_set_visible(p, p->visible);
+        native_view_set_user_interaction_enabled(p, p->user_interaction_enabled);
 
-        nview_on_change_listview(p);
+        native_view_on_change_listview(p);
 }
 
-void nview_add_child(struct nview *p, struct nview *c)
+void native_view_add_child(struct native_view *p, struct native_view *c)
 {
         if(c->parent && c->parent->name_to_child) {
                 map_remove_key(c->parent->name_to_child, qskey(c->name));
@@ -332,7 +332,7 @@ void nview_add_child(struct nview *p, struct nview *c)
 
         if(c->name->len) {
                 if(!p->name_to_child) {
-                        p->name_to_child = map_alloc(sizeof(struct nview *));
+                        p->name_to_child = map_alloc(sizeof(struct native_view *));
                         map_set(p->name_to_child, qskey(c->name), &c);
                 }
         }
@@ -348,19 +348,19 @@ void nview_add_child(struct nview *p, struct nview *c)
                 view_helper_shared.view_add_child(pr, ch);
         }, p->ptr, c->ptr);
 
-        nview_set_position(c, c->position);
-        nview_set_size(c, c->size);
-        nview_set_scale(c, c->scale);
-        nview_set_rotation(c, c->rotation);
-        nview_set_clip(c, c->clip);
-        nview_set_color(c, c->color, c->border_color);
-        nview_set_alpha(c, c->alpha);
-        nview_set_anchor(c, c->anchor);
-        nview_set_visible(c, c->visible);
-        nview_set_user_interaction_enabled(c, c->user_interaction_enabled);
+        native_view_set_position(c, c->position);
+        native_view_set_size(c, c->size);
+        native_view_set_scale(c, c->scale);
+        native_view_set_rotation(c, c->rotation);
+        native_view_set_clip(c, c->clip);
+        native_view_set_color(c, c->color, c->border_color);
+        native_view_set_alpha(c, c->alpha);
+        native_view_set_anchor(c, c->anchor);
+        native_view_set_visible(c, c->visible);
+        native_view_set_user_interaction_enabled(c, c->user_interaction_enabled);
 }
 
-void nview_remove_from_parent(struct nview *p)
+void native_view_remove_from_parent(struct native_view *p)
 {
         if(!p->parent) return;
 
@@ -377,7 +377,7 @@ void nview_remove_from_parent(struct nview *p)
         }, p->ptr);
 }
 
-void nview_set_position(struct nview *p, union vec2 position)
+void native_view_set_position(struct native_view *p, union vec2 position)
 {
         p->position     = position;
 
@@ -387,7 +387,7 @@ void nview_set_position(struct nview *p, union vec2 position)
         }, p->ptr, position.x, position.y);
 }
 
-void nview_set_size(struct nview *p, union vec2 size)
+void native_view_set_size(struct native_view *p, union vec2 size)
 {
         p->size         = size;
         EM_ASM_({
@@ -396,7 +396,7 @@ void nview_set_size(struct nview *p, union vec2 size)
         }, p->ptr, size.width, size.height);
 }
 
-void nview_set_scale(struct nview *p, union vec2 scale)
+void native_view_set_scale(struct native_view *p, union vec2 scale)
 {
         p->scale                        = scale;
         EM_ASM_({
@@ -405,7 +405,7 @@ void nview_set_scale(struct nview *p, union vec2 scale)
         }, p->ptr, scale.x, scale.y);
 }
 
-void nview_set_rotation(struct nview *p, union vec3 rotation)
+void native_view_set_rotation(struct native_view *p, union vec3 rotation)
 {
         p->rotation                     = rotation;
 
@@ -415,7 +415,7 @@ void nview_set_rotation(struct nview *p, union vec3 rotation)
         }, p->ptr, rotation.x, rotation.y, rotation.z);
 }
 
-void nview_set_color(struct nview *p, union vec4 *color, union vec4 *border)
+void native_view_set_color(struct native_view *p, union vec4 *color, union vec4 *border)
 {
         if(color) {
                 if(!p->color) {
@@ -466,7 +466,7 @@ void nview_set_color(struct nview *p, union vec4 *color, union vec4 *border)
         }
 }
 
-void nview_set_visible(struct nview *p, u8 visible)
+void native_view_set_visible(struct native_view *p, u8 visible)
 {
         p->visible = visible;
 
@@ -476,7 +476,7 @@ void nview_set_visible(struct nview *p, u8 visible)
         }, p->ptr, (int)visible);
 }
 
-void nview_set_alpha(struct nview *p, float alpha)
+void native_view_set_alpha(struct native_view *p, float alpha)
 {
         p->alpha                        = alpha;
 
@@ -486,7 +486,7 @@ void nview_set_alpha(struct nview *p, float alpha)
         }, p->ptr, alpha);
 }
 
-void nview_set_clip(struct nview *p, u8 clip)
+void native_view_set_clip(struct native_view *p, u8 clip)
 {
         p->clip                         = clip;
 
@@ -501,7 +501,7 @@ void nview_set_clip(struct nview *p, u8 clip)
         }, p->ptr, (int)p->clip_rounds.x);
 }
 
-void nview_set_anchor(struct nview *p, union vec2 anchor)
+void native_view_set_anchor(struct native_view *p, union vec2 anchor)
 {
         p->anchor                       = anchor;
         EM_ASM_({
@@ -510,7 +510,7 @@ void nview_set_anchor(struct nview *p, union vec2 anchor)
         }, p->ptr, anchor.x, anchor.y);
 }
 
-void nview_set_user_interaction_enabled(struct nview *p, u8 enabled)
+void native_view_set_user_interaction_enabled(struct native_view *p, u8 enabled)
 {
         p->user_interaction_enabled     = enabled;
 
@@ -520,7 +520,7 @@ void nview_set_user_interaction_enabled(struct nview *p, u8 enabled)
         }, p->ptr, (int)enabled);
 }
 
-union vec2 nview_convert_point_to_view(struct nview *from, union vec2 point, struct nview *to)
+union vec2 native_view_convert_point_to_view(struct native_view *from, union vec2 point, struct native_view *to)
 {
         i32 fleft = (i32) EM_ASM_({
                 var pr = __shared_object_get($0);
@@ -551,57 +551,57 @@ union vec2 nview_convert_point_to_view(struct nview *from, union vec2 point, str
 /*
  * custom view functions
  */
-struct string *nview_get_text(struct nview *p)
+struct string *native_view_get_text(struct native_view *p)
 {
         if(p->type != NATIVE_UI_TEXTFIELD) return NULL;
 
         return NULL;
 }
 
-void nview_set_text_placeholder(struct nview *p, char *text, size_t len)
+void native_view_set_text_placeholder(struct native_view *p, char *text, size_t len)
 {
         if(p->type != NATIVE_UI_TEXTFIELD) return;
 
         // custom_text_field_set_placeholder(p->ptr, text, len);
 }
 
-void nview_on_change_label(struct nview *p)
+void native_view_on_change_label(struct native_view *p)
 {
 
 }
 
-void nview_update_label(struct nview *p)
+void native_view_update_label(struct native_view *p)
 {
 
 }
 
-void nview_set_text_align(struct nview *p, u8 text_align)
+void native_view_set_text_align(struct native_view *p, u8 text_align)
 {
 
 }
 
-void nview_set_text_multiline(struct nview *p, u8 multiline)
+void native_view_set_text_multiline(struct native_view *p, u8 multiline)
 {
 
 }
 
-void nview_set_text(struct nview *p, char *text, size_t len)
+void native_view_set_text(struct native_view *p, char *text, size_t len)
 {
 
 }
 
-void nview_set_text_color(struct nview *p, union vec4 color)
+void native_view_set_text_color(struct native_view *p, union vec4 color)
 {
 
 }
 
-void nview_set_font(struct nview *p, char *font_name, size_t len, size_t size)
+void native_view_set_font(struct native_view *p, char *font_name, size_t len, size_t size)
 {
 
 }
 
 
-void nview_on_change_imageview(struct nview *p, char *path)
+void native_view_on_change_imageview(struct native_view *p, char *path)
 {
         EM_ASM_({
                 var pr = __shared_object_get($0);

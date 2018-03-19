@@ -24,14 +24,14 @@
 #include <cherry/stdio.h>
 #include <cherry/math/math.h>
 
-void __nview_list_view_data_free(struct nview_list_view_data *p)
+void __native_view_list_view_data_free(struct native_view_list_view_data *p)
 {
         sfree(p);
 }
 
-static struct nview_list_view_data *__nview_list_view_data_alloc()
+static struct native_view_list_view_data *__native_view_list_view_data_alloc()
 {
-        struct nview_list_view_data *p    = smalloc(sizeof(struct nview_list_view_data), __nview_list_view_data_free);
+        struct native_view_list_view_data *p    = smalloc(sizeof(struct native_view_list_view_data), __native_view_list_view_data_free);
         p->bouncing                             = 0;
         p->hold                                 = 0;
         p->scrolling                            = 0;
@@ -41,19 +41,19 @@ static struct nview_list_view_data *__nview_list_view_data_alloc()
         return p;
 }
 
-void nview_on_change_listview(struct nview *p)
+void native_view_on_change_listview(struct native_view *p)
 {
         if(p->custom_data && p->custom_data_free) {
                 p->custom_data_free(p->custom_data);
         }
 
-        p->custom_data          = __nview_list_view_data_alloc();
-        p->custom_data_free     = __nview_list_view_data_free;
+        p->custom_data          = __native_view_list_view_data_alloc();
+        p->custom_data_free     = __native_view_list_view_data_free;
 }
 
-static void __list_view_update_vertical(struct nview *p, float delta)
+static void __list_view_update_vertical(struct native_view *p, float delta)
 {
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
 
         float target_bottom = p->bound.height - p->size.height;
         if(target_bottom < 0) target_bottom = 0;
@@ -144,7 +144,7 @@ static void __list_view_update_vertical(struct nview *p, float delta)
 
                                         if(p->offset_child.y <= 0) {
                                                 p->offset_child.y = 0;
-                                                nview_unschedule(p, qlkey("list_view_update"));
+                                                native_view_unschedule(p, qlkey("list_view_update"));
                                                 data->scrolling = 0;
                                         }
                                         data->velocity          = vec2_mul_scalar(data->velocity, 0.95f);
@@ -160,7 +160,7 @@ static void __list_view_update_vertical(struct nview *p, float delta)
                                 data->acceleration.y = data->acceleration.y * 0.05;
 
                                 if(p->offset_child.y > -target_bottom) {
-                                        nview_unschedule(p, qlkey("list_view_update"));
+                                        native_view_unschedule(p, qlkey("list_view_update"));
                                         data->scrolling = 0;
                                         goto update_layout;
                                 }
@@ -176,7 +176,7 @@ static void __list_view_update_vertical(struct nview *p, float delta)
 
                                         if(p->offset_child.y >= -target_bottom) {
                                                 p->offset_child.y = -target_bottom;
-                                                nview_unschedule(p, qlkey("list_view_update"));
+                                                native_view_unschedule(p, qlkey("list_view_update"));
                                                 data->scrolling = 0;
                                         }
                                         data->velocity          = vec2_mul_scalar(data->velocity, 0.95f);
@@ -187,12 +187,12 @@ static void __list_view_update_vertical(struct nview *p, float delta)
 
         }
 update_layout:;
-        nview_update_layout(p);
+        native_view_update_layout(p);
 }
 
-static void __list_view_update_horizontal(struct nview *p, float delta)
+static void __list_view_update_horizontal(struct native_view *p, float delta)
 {
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
 
         float target_bottom = p->bound.width - p->size.width;
         if(target_bottom < 0) target_bottom = 0;
@@ -284,7 +284,7 @@ static void __list_view_update_horizontal(struct nview *p, float delta)
 
                                         if(p->offset_child.x <= 0) {
                                                 p->offset_child.x = 0;
-                                                nview_unschedule(p, qlkey("list_view_update"));
+                                                native_view_unschedule(p, qlkey("list_view_update"));
                                                 data->scrolling = 0;
                                         }
                                         data->velocity          = vec2_mul_scalar(data->velocity, 0.95f);
@@ -300,7 +300,7 @@ static void __list_view_update_horizontal(struct nview *p, float delta)
                                 data->acceleration.x = data->acceleration.x * 0.05;
 
                                 if(p->offset_child.x > -target_bottom) {
-                                        nview_unschedule(p, qlkey("list_view_update"));
+                                        native_view_unschedule(p, qlkey("list_view_update"));
                                         data->scrolling = 0;
                                         goto update_layout;
                                 }
@@ -316,7 +316,7 @@ static void __list_view_update_horizontal(struct nview *p, float delta)
 
                                         if(p->offset_child.x >= -target_bottom) {
                                                 p->offset_child.x = -target_bottom;
-                                                nview_unschedule(p, qlkey("list_view_update"));
+                                                native_view_unschedule(p, qlkey("list_view_update"));
                                                 data->scrolling = 0;
                                         }
                                         data->velocity          = vec2_mul_scalar(data->velocity, 0.95f);
@@ -327,15 +327,15 @@ static void __list_view_update_horizontal(struct nview *p, float delta)
 
         }
 update_layout:;
-        nview_update_layout(p);
+        native_view_update_layout(p);
 }
 
-static void __list_view_update(struct nview *p, float delta)
+static void __list_view_update(struct native_view *p, float delta)
 {
         int layout_type                                                 = -1;
         if(!list_singular(&p->layout_controller)) {
-                struct nlyt_exec *controller        = (struct nlyt_exec *)
-                        ((char *)p->layout_controller.next - offsetof(struct nlyt_exec, head));
+                struct native_layout *controller        = (struct native_layout *)
+                        ((char *)p->layout_controller.next - offsetof(struct native_layout, head));
                 layout_type                                             = controller->type;
         }
         switch (layout_type) {
@@ -350,36 +350,36 @@ static void __list_view_update(struct nview *p, float delta)
         }
 }
 
-void nview_list_view_touch_began(struct nview *p, union vec2 liv)
+void native_view_list_view_touch_began(struct native_view *p, union vec2 liv)
 {
-        // nview_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        // native_view_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
         data->hold                              = 1;
         data->bouncing                          = 0;
         data->stop                              = 1;
         data->last_moved_point                  = liv;
 }
 
-void nview_list_view_touch_moved(struct nview *p, union vec2 liv)
+void native_view_list_view_touch_moved(struct native_view *p, union vec2 liv)
 {
         int layout_type                                                 = -1;
         if(!list_singular(&p->layout_controller)) {
-                struct nlyt_exec *controller        = (struct nlyt_exec *)
-                        ((char *)p->layout_controller.next - offsetof(struct nlyt_exec, head));
+                struct native_layout *controller        = (struct native_layout *)
+                        ((char *)p->layout_controller.next - offsetof(struct native_layout, head));
                 layout_type                                             = controller->type;
         }
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
         if(!data->scrolling) {
                 switch (layout_type) {
                         case NATIVE_UI_LAYOUT_HORIZONTAL:
                                 if(fabsf(liv.x - data->last_moved_point.x) >= 10) {
-                                        nview_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
+                                        native_view_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
                                         data->scrolling = 1;
                                 }
                                 break;
                         case NATIVE_UI_LAYOUT_VERTICAL:
                                 if(fabsf(liv.y - data->last_moved_point.y) >= 10) {
-                                        nview_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
+                                        native_view_schedule(p, qlkey("list_view_update"), -1, __list_view_update);
                                         data->scrolling = 1;
                                 }
                                 break;
@@ -500,14 +500,14 @@ void nview_list_view_touch_moved(struct nview *p, union vec2 liv)
         data->last_moved_point                  = liv;
 }
 
-void nview_list_view_touch_ended(struct nview *p, union vec2 liv)
+void native_view_list_view_touch_ended(struct native_view *p, union vec2 liv)
 {
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
         data->hold                              = 0;
 }
 
-void nview_list_view_touch_cancelled(struct nview *p, union vec2 liv)
+void native_view_list_view_touch_cancelled(struct native_view *p, union vec2 liv)
 {
-        struct nview_list_view_data *data = (struct nview_list_view_data *)p->custom_data;
+        struct native_view_list_view_data *data = (struct native_view_list_view_data *)p->custom_data;
         data->hold                              = 0;
 }

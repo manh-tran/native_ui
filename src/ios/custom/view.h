@@ -22,7 +22,7 @@ extern "C" {
 
 @interface CustomView : UIView
 
-@property struct nview *native_ptr;
+@property struct native_view *native_ptr;
 
 @end
 

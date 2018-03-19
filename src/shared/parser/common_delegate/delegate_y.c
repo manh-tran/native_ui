@@ -23,7 +23,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_y(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_y(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->position.y   = (float)satof(a->value->ptr);
 }

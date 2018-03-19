@@ -21,22 +21,22 @@
 #include <cherry/math/math.h>
 #include <pthread.h>
 
-struct ntask *ntask_alloc()
+struct native_task *native_task_alloc()
 {
-        struct ntask *p = smalloc(sizeof(struct ntask), ntask_free);
+        struct native_task *p = smalloc(sizeof(struct native_task), native_task_free);
         INIT_LIST_HEAD(&p->head);
         INIT_LIST_HEAD(&p->user_head);
         p->data                         = NULL;
         p->delegate                     = NULL;
         p->count                        = 0;
 
-        struct nmanager *manager = nmanager_shared();
+        struct native_manager *manager = native_manager_shared();
         list_add_tail(&p->head, &manager->update_tasks);
 
         return p;
 }
 
-void ntask_free(struct ntask *p)
+void native_task_free(struct native_task *p)
 {
         list_del(&p->head);
         list_del(&p->user_head);
@@ -46,12 +46,12 @@ void ntask_free(struct ntask *p)
 /*
  * native ui manager
  */
-static struct nmanager *__manager = NULL;
+static struct native_manager *__manager = NULL;
 
 static void __clear()
 {
         if(__manager) {
-                nmanager_free(__manager);
+                native_manager_free(__manager);
                 __manager = NULL;
         }
 }
@@ -60,37 +60,37 @@ static void __setup()
 {
         if(!__manager) {
                 cache_add(__clear);
-                __manager = nmanager_alloc();
+                __manager = native_manager_alloc();
         }
 }
 
-struct nmanager *nmanager_shared()
+struct native_manager *native_manager_shared()
 {
         __setup();
         return __manager;
 }
 
-struct nmanager *nmanager_alloc()
+struct native_manager *native_manager_alloc()
 {
-        struct nmanager *p     = smalloc(sizeof(struct nmanager), nmanager_free);
+        struct native_manager *p     = smalloc(sizeof(struct native_manager), native_manager_free);
         INIT_LIST_HEAD(&p->update_tasks);
         INIT_LIST_HEAD(&p->action_keys);
         INIT_LIST_HEAD(&p->touches);
         return p;
 }
 
-void nmanager_free(struct nmanager *p)
+void native_manager_free(struct native_manager *p)
 {
         struct list_head *head;
-        list_for_each_secure_mutex_lock(head, &p->touches, &__shared_nview_touch_lock, {
-                struct nview_touch_data *data = (struct nview_touch_data *)
-                        ((char *)head - offsetof(struct nview_touch_data, shared_head));
-                nview_touch_data_free(data);
+        list_for_each_secure_mutex_lock(head, &p->touches, &__shared_native_view_touch_lock, {
+                struct native_view_touch_data *data = (struct native_view_touch_data *)
+                        ((char *)head - offsetof(struct native_view_touch_data, shared_head));
+                native_view_touch_data_free(data);
         });
         list_while_not_singular(head, &p->update_tasks) {
-                struct ntask *task      = (struct ntask *)
-                        ((char *)head - offsetof(struct ntask, head));
-                ntask_free(task);
+                struct native_task *task      = (struct native_task *)
+                        ((char *)head - offsetof(struct native_task, head));
+                native_task_free(task);
         }
         list_while_not_singular(head, &p->action_keys) {
                 struct naction_key *key = (struct naction_key *)
@@ -100,13 +100,13 @@ void nmanager_free(struct nmanager *p)
         sfree(p);
 }
 
-void nmanager_add_action_key(struct nmanager *p, struct naction_key *key)
+void native_manager_add_action_key(struct native_manager *p, struct naction_key *key)
 {
         list_del(&key->key_head);
         list_add_tail(&key->key_head, &p->action_keys);
 }
 
-static void __nmanager_update_action(struct nmanager *p, float delta)
+static void __native_manager_update_action(struct native_manager *p, float delta)
 {
         struct list_head *head, *next;
         list_for_each_secure(head, &p->action_keys, {
@@ -130,12 +130,12 @@ static void __nmanager_update_action(struct nmanager *p, float delta)
         });
 }
 
-static void __nmanager_update_task(struct nmanager *p, float delta)
+static void __native_manager_update_task(struct native_manager *p, float delta)
 {
         struct list_head *head;
         list_for_each_secure(head, &p->update_tasks, {
-                struct ntask *task      = (struct ntask *)
-                        ((char *)head - offsetof(struct ntask, head));
+                struct native_task *task      = (struct native_task *)
+                        ((char *)head - offsetof(struct native_task, head));
                 if(task->delegate) {
                         task->delegate(task->data, delta);
                 }
@@ -143,43 +143,43 @@ static void __nmanager_update_task(struct nmanager *p, float delta)
                         task->count--;
                 }
                 if(task->count == 0) {
-                        ntask_free(task);
+                        native_task_free(task);
                 }
         });
 }
 
-static void __nmanager_update_touch(struct nmanager *p)
+static void __native_manager_update_touch(struct native_manager *p)
 {
         struct list_head *head;
-        list_for_each_secure_mutex_lock(head, &p->touches, &__shared_nview_touch_lock, {
-                struct nview_touch_data *data = (struct nview_touch_data *)
-                        ((char *)head - offsetof(struct nview_touch_data, shared_head));
-                struct nview *view        = data->view;
+        list_for_each_secure_mutex_lock(head, &p->touches, &__shared_native_view_touch_lock, {
+                struct native_view_touch_data *data = (struct native_view_touch_data *)
+                        ((char *)head - offsetof(struct native_view_touch_data, shared_head));
+                struct native_view *view        = data->view;
                 u8 type                         = data->type;
                 union vec2 pt = data->point;
 
-                nview_touch_data_free(data);
+                native_view_touch_data_free(data);
 
                 switch (type) {
                         case NATIVE_UI_TOUCH_BEGAN:
-                                nview_touch_began(view, pt);
+                                native_view_touch_began(view, pt);
                                 break;
                         case NATIVE_UI_TOUCH_MOVED:
-                                nview_touch_moved(view, pt);
+                                native_view_touch_moved(view, pt);
                                 break;
                         case NATIVE_UI_TOUCH_ENDED:
-                                nview_touch_ended(view, pt);
+                                native_view_touch_ended(view, pt);
                                 break;
                         case NATIVE_UI_TOUCH_CANCELLED:
-                                nview_touch_cancelled(view, pt);
+                                native_view_touch_cancelled(view, pt);
                                 break;
                 }
         });
 }
 
-void nmanager_update(struct nmanager *p, float delta)
+void native_manager_update(struct native_manager *p, float delta)
 {
-        __nmanager_update_touch(p);
-        __nmanager_update_task(p, delta);
-        __nmanager_update_action(p, delta);
+        __native_manager_update_touch(p);
+        __native_manager_update_task(p, delta);
+        __native_manager_update_action(p, delta);
 }

@@ -23,17 +23,17 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_rotation_x(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_rotation_x(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->rotation.x   = (float)satof(a->value->ptr);
 }
 
-void parse_common_rotation_y(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_rotation_y(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->rotation.y   = (float)satof(a->value->ptr);
 }
 
-void parse_common_rotation_z(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_rotation_z(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->rotation.z   = (float)satof(a->value->ptr);
 }

@@ -25,15 +25,15 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-struct nview *parser_touch(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_touch(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
         struct xml_attribute *key = xml_find_attribute(e, "key");
         if(key) {
-                struct ntouch *handle = ntouch_alloc();
+                struct native_touch *handle = native_touch_alloc();
 
                 if(map_has_key(parser->hash_touches, qskey(key->value))) {
-                        struct ntouch *prev = map_get(parser->hash_touches, struct ntouch *, qskey(key->value));
-                        ntouch_free(prev);
+                        struct native_touch *prev = map_get(parser->hash_touches, struct native_touch *, qskey(key->value));
+                        native_touch_free(prev);
                         map_remove_key(parser->hash_touches, qskey(key->value));
                 }
                 map_set(parser->hash_touches, qskey(key->value), &handle);

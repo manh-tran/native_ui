@@ -20,9 +20,9 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-struct nview_touch_data *nview_touch_data_alloc();
+struct native_view_touch_data *native_view_touch_data_alloc();
 
-void nview_touch_data_free(struct nview_touch_data *p);
+void native_view_touch_data_free(struct native_view_touch_data *p);
 
 #ifdef __cplusplus
 }

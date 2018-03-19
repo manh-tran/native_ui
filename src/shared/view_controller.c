@@ -18,17 +18,18 @@
 #include <cherry/list.h>
 #include <cherry/array.h>
 #include <cherry/stdio.h>
+#include <cherry/pool_list.h>
 #include <cherry/map.h>
 
-static nexec_afnf __from_name_delegate = NULL;
+static native_controller_afnf __from_name_delegate = NULL;
 
-struct nexec *nexec_alloc_fn(char *name, size_t len)
+struct native_controller *native_controller_alloc_fn(char *name, size_t len)
 {
         if(__from_name_delegate) return __from_name_delegate(name, len);
         else return NULL;
 }
 
-void nexec_set_fnf(nexec_afnf delegate)
+void native_controller_set_fnf(native_controller_afnf delegate)
 {
         __from_name_delegate = delegate;
 }
@@ -36,16 +37,16 @@ void nexec_set_fnf(nexec_afnf delegate)
 static void __free_task(struct list_head *head)
 {
         if(!list_singular(head)) {
-                struct ntask *task = (struct ntask *)
-                        ((char *)head->next - offsetof(struct ntask, user_head));
-                ntask_free(task);
+                struct native_task *task = (struct native_task *)
+                        ((char *)head->next - offsetof(struct native_task, user_head));
+                native_task_free(task);
         }
         sfree(head);
 }
 
-struct nexec *nexec_alloc()
+struct native_controller *native_controller_alloc()
 {
-        struct nexec *p        = smalloc(sizeof(struct nexec), nexec_free);
+        struct native_controller *p        = smalloc(sizeof(struct native_controller), native_controller_free);
         p->custom_data                          = NULL;
         p->custom_data_free                     = NULL;
         p->parent                               = NULL;
@@ -55,35 +56,41 @@ struct nexec *nexec_alloc()
         INIT_LIST_HEAD(&p->head);
         INIT_LIST_HEAD(&p->children);
         INIT_LIST_HEAD(&p->view);
+        INIT_POOL_LIST_HEAD(&p->anonymous);
 
         p->tasks                                = map_alloc(sizeof(struct list_head *));
 
         return p;
 }
 
-void nexec_free(struct nexec *p)
+void native_controller_free(struct native_controller *p)
 {
         /*
          * free update task
          */
         map_deep_free(p->tasks, struct list_head *, __free_task);
+        struct pool_list_head *plhead;
+        while(!pool_list_singular(&p->anonymous)) {
+                plhead = pool_list_get(&p->anonymous);
+                pool_list_del(plhead);
+        }
 
         if(!list_singular(&p->view)) {
-                struct nview *view = (struct nview *)
-                        ((char *)p->view.next - offsetof(struct nview, view_controller));
+                struct native_view *view = (struct native_view *)
+                        ((char *)p->view.next - offsetof(struct native_view, view_controller));
                 list_del_init(&p->view);
                 debug("native ui controller free view\n");
-                nview_free(view);
+                native_view_free(view);
         }
         struct list_head *head;
         list_while_not_singular(head, &p->children) {
-                struct nexec *child = (struct nexec *)
-                        ((char *)head - offsetof(struct nexec, head));
+                struct native_controller *child = (struct native_controller *)
+                        ((char *)head - offsetof(struct native_controller, head));
                 list_del_init(head);
                 if(child->on_removed) {
                         child->on_removed(child);
                 }
-                nexec_free(child);
+                native_controller_free(child);
         }
         if(!list_singular(&p->head) && p->on_removed) {
                 list_del_init(&p->head);
@@ -99,7 +106,7 @@ void nexec_free(struct nexec *p)
         sfree(p);
 }
 
-void nexec_reg(struct nexec *p, char *key, size_t len, int count, ntaskf delegate)
+void native_controller_register_task(struct native_controller *p, char *key, size_t len, int count, native_task_delegate delegate)
 {
         if(map_has_key(p->tasks, key, len)) {
                 struct list_head *head = map_get(p->tasks, struct list_head *, key, len);
@@ -110,7 +117,7 @@ void nexec_reg(struct nexec *p, char *key, size_t len, int count, ntaskf delegat
         struct list_head *head   = smalloc(sizeof(struct list_head), NULL);
         INIT_LIST_HEAD(head);
 
-        struct ntask *task = ntask_alloc();
+        struct native_task *task = native_task_alloc();
         list_add_tail(&task->user_head, head);
         task->count     = count;
         task->data      = p;
@@ -119,7 +126,7 @@ void nexec_reg(struct nexec *p, char *key, size_t len, int count, ntaskf delegat
         map_set(p->tasks, key, len, &head);
 }
 
-void nexec_unreg(struct nexec *p, char *key, size_t len)
+void native_controller_unreg(struct native_controller *p, char *key, size_t len)
 {
         if(map_has_key(p->tasks, key, len)) {
                 struct list_head *head = map_get(p->tasks, struct list_head *, key, len);
@@ -128,7 +135,7 @@ void nexec_unreg(struct nexec *p, char *key, size_t len)
         }
 }
 
-void nexec_link(struct nexec *p, struct nexec *c)
+void native_controller_link(struct native_controller *p, struct native_controller *c)
 {
         if(!list_singular(&c->head) && c->on_removed) {
                 list_del_init(&c->head);
@@ -144,29 +151,29 @@ void nexec_link(struct nexec *p, struct nexec *c)
         }
 }
 
-struct nview *nexec_get_view(struct nexec *p)
+struct native_view *native_controller_get_view(struct native_controller *p)
 {
         if(!list_singular(&p->view)) {
-                struct nview *view = (struct nview *)
-                        ((char *)p->view.next - offsetof(struct nview, view_controller));
+                struct native_view *view = (struct native_view *)
+                        ((char *)p->view.next - offsetof(struct native_view, view_controller));
                 return view;
         }
         return NULL;
 }
 
-void nexec_set_view(struct nexec *p, struct nview *v)
+void native_controller_set_view(struct native_controller *p, struct native_view *v)
 {
         if(!list_singular(&v->view_controller)) {
-                struct nexec *controller = (struct nexec *)
-                        ((char *)v->view_controller.next - offsetof(struct nexec, view));
+                struct native_controller *controller = (struct native_controller *)
+                        ((char *)v->view_controller.next - offsetof(struct native_controller, view));
                 list_del_init(&v->view_controller);
-                nexec_free(controller);
+                native_controller_free(controller);
         }
         if(!list_singular(&p->view)) {
-                struct nview *view = (struct nview *)
-                        ((char *)p->view.next - offsetof(struct nview, view_controller));
+                struct native_view *view = (struct native_view *)
+                        ((char *)p->view.next - offsetof(struct native_view, view_controller));
                 list_del_init(&p->view);
-                nview_free(view);
+                native_view_free(view);
         }
         list_add_tail(&v->view_controller, &p->view);
 }

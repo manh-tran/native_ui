@@ -24,12 +24,12 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_anchor_x(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_anchor_x(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->anchor.x =  (float)satof(a->value->ptr);
 }
 
-void parse_common_anchor_y(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_anchor_y(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->anchor.y =  (float)satof(a->value->ptr);
 }

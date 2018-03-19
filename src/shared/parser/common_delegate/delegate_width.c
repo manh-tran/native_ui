@@ -25,7 +25,7 @@
 #include <cherry/stdlib.h>
 #include <cherry/stdio.h>
 
-void parse_common_width(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_width(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         if(strcmp(a->value->ptr, "match_parent") == 0) {
                 v->align->size_width = NATIVE_UI_SIZE_MATCH_PARENT;
@@ -33,6 +33,10 @@ void parse_common_width(struct nview *v, struct xml_attribute *a, struct nparser
                 v->align->size_width = NATIVE_UI_SIZE_FILL;
         } else if(strcmp(a->value->ptr, "wrap_content") == 0) {
                 v->align->size_width = NATIVE_UI_SIZE_WRAP_CONTENT;
+        } else if(strcmp(a->value->ptr, "equal") == 0) {
+                v->align->size_width = NATIVE_UI_SIZE_EQUAL;
+        } else if(strcmp(a->value->ptr, "weight") == 0) {
+                v->align->size_width = NATIVE_UI_SIZE_WEIGHT;
         } else {
                 v->align->fixed_width = (float)satof(a->value->ptr);
                 v->align->size_width = NATIVE_UI_SIZE_FIXED;

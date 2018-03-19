@@ -18,15 +18,16 @@
 
 struct string *nfile_fullpath(char *file)
 {
-        if(strncmp(file, INNER_PATH, sizeof(INNER_PATH) - 1) == 0) {
-                return file_full_path(file, FILE_INNER);
-        } else if(strncmp(file, LOCAL_PATH, sizeof(LOCAL_PATH) - 1) == 0) {
-                return file_full_path(file, FILE_LOCAL);
-        } else if(strncmp(file, SD_PATH, sizeof(SD_PATH) - 1) == 0){
-                return file_full_path(file, FILE_SDCARD);
-        } else {
-                return NULL;
-        }
+        // if(strncmp(file, INNER_PATH, sizeof(INNER_PATH) - 1) == 0) {
+        //         return file_full_path(file, FILE_INNER);
+        // } else if(strncmp(file, LOCAL_PATH, sizeof(LOCAL_PATH) - 1) == 0) {
+        //         return file_full_path(file, FILE_LOCAL);
+        // } else if(strncmp(file, SD_PATH, sizeof(SD_PATH) - 1) == 0){
+        //         return file_full_path(file, FILE_SDCARD);
+        // } else {
+        //         return NULL;
+        // }
+        return file_xpath(file);
 }
 
 u8 nfile_type(char *file)
@@ -44,13 +45,14 @@ u8 nfile_type(char *file)
 
 struct file *nfile_open(char *path, char *mode)
 {
-        if(strncmp(path, INNER_PATH, sizeof(INNER_PATH) - 1) == 0) {
-                return file_open(path, mode, FILE_INNER);
-        } else if(strncmp(path, LOCAL_PATH, sizeof(LOCAL_PATH) - 1) == 0) {
-                return file_open(path, mode, FILE_LOCAL);
-        } else if(strncmp(path, SD_PATH, sizeof(SD_PATH) - 1) == 0){
-                return file_open(path, mode, FILE_SDCARD);
-        } else {
-                return NULL;
-        }
+        return file_xopen(path, mode);
+        // if(strncmp(path, INNER_PATH, sizeof(INNER_PATH) - 1) == 0) {
+        //         return file_open(path, mode, FILE_INNER);
+        // } else if(strncmp(path, LOCAL_PATH, sizeof(LOCAL_PATH) - 1) == 0) {
+        //         return file_open(path, mode, FILE_LOCAL);
+        // } else if(strncmp(path, SD_PATH, sizeof(SD_PATH) - 1) == 0){
+        //         return file_open(path, mode, FILE_SDCARD);
+        // } else {
+        //         return NULL;
+        // }
 }

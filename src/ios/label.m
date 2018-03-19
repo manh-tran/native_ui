@@ -32,7 +32,7 @@
 #import <cherry/math/math.h>
 #import "custom/label.h"
 
-void nview_on_change_label(struct nview *p)
+void native_view_on_change_label(struct native_view *p)
 {
         if(p->custom_data && p->custom_data_free) {
                 p->custom_data_free(p->custom_data);
@@ -40,10 +40,10 @@ void nview_on_change_label(struct nview *p)
                 p->custom_data_free     = NULL;
         }
 
-        p->custom_data                          = nview_label_data_alloc();
-        p->custom_data_free                     = nview_label_data_free;
+        p->custom_data                          = native_view_label_data_alloc();
+        p->custom_data_free                     = native_view_label_data_free;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->font                              = native_ui_font_get(qlkey("arial"), 14);
 
         CustomLabel *view                       = (__bridge id)(p->ptr);
@@ -52,15 +52,15 @@ void nview_on_change_label(struct nview *p)
         view.textColor                          = [UIColor blackColor];
         view.numberOfLines                      = data->multi_line ? 0 : 1;
 
-        nview_update_label(p);
-        nview_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
+        native_view_update_label(p);
+        native_view_set_text_align(p, NATIVE_UI_LABEL_ALIGN_LEFT);
 }
 
-void nview_update_label(struct nview *p)
+void native_view_update_label(struct native_view *p)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
 
         if(data->dirty || fabsf(p->size.width - data->current_width) > 1) {
                 CustomLabel *view                       = (__bridge id)(p->ptr);
@@ -72,7 +72,7 @@ void nview_update_label(struct nview *p)
                 size.width      = p->size.width;
                 size.height     = view.bounds.size.height;
 
-                nview_set_size(p, size);
+                native_view_set_size(p, size);
 
                 p->align->fixed_width                   = view.bounds.size.width;
                 p->align->fixed_height                  = view.bounds.size.height;
@@ -82,11 +82,11 @@ void nview_update_label(struct nview *p)
         }
 }
 
-void nview_set_text_align(struct nview *p, u8 text_align)
+void native_view_set_text_align(struct native_view *p, u8 text_align)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->align                             = text_align;
         data->dirty                             = 1;
 
@@ -110,25 +110,25 @@ void nview_set_text_align(struct nview *p, u8 text_align)
         }
 }
 
-void nview_set_text_multiline(struct nview *p, u8 multiline)
+void native_view_set_text_multiline(struct native_view *p, u8 multiline)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->multi_line                        = multiline;
         data->dirty                             = 1;
 
         CustomLabel *view                       = (__bridge id)(p->ptr);
         view.numberOfLines                      = data->multi_line ? 0 : 1;
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_text(struct nview *p, char *text, size_t len)
+void native_view_set_text(struct native_view *p, char *text, size_t len)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->dirty                             = 1;
         data->text->len                         = 0;
         string_cat(data->text, text, len);
@@ -136,25 +136,25 @@ void nview_set_text(struct nview *p, char *text, size_t len)
         CustomLabel *view                       = (__bridge id)(p->ptr);
         [view setText:[NSString stringWithUTF8String:data->text->ptr]];
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
-void nview_set_text_color(struct nview *p, union vec4 color)
+void native_view_set_text_color(struct native_view *p, union vec4 color)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->color                             = color;
 
         CustomLabel *view                       = (__bridge id)(p->ptr);
         view.textColor                          = [UIColor colorWithRed:color.r green:color.g blue:color.b alpha:color.a];
 }
 
-void nview_set_font(struct nview *p, char *font_name, size_t len, size_t size)
+void native_view_set_font(struct native_view *p, char *font_name, size_t len, size_t size)
 {
         if(p->type != NATIVE_UI_LABEL) return;
 
-        struct nview_label_data *data     = (struct nview_label_data *)p->custom_data;
+        struct native_view_label_data *data     = (struct native_view_label_data *)p->custom_data;
         data->font                              = native_ui_font_get(font_name, len, size);
         data->dirty                             = 1;
 
@@ -162,7 +162,7 @@ void nview_set_font(struct nview *p, char *font_name, size_t len, size_t size)
         UIFont *font                            = (__bridge id)(data->font->ptr);
         [view setFont:font];
 
-        nview_request_layout(p);
+        native_view_request_layout(p);
 }
 
 #endif

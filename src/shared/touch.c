@@ -15,16 +15,16 @@
 #include <cherry/memory.h>
 #include <cherry/list.h>
 
-struct nview_touch_data *nview_touch_data_alloc()
+struct native_view_touch_data *native_view_touch_data_alloc()
 {
-        struct nview_touch_data *p        = smalloc(sizeof(struct nview_touch_data), nview_touch_data_free);
+        struct native_view_touch_data *p        = smalloc(sizeof(struct native_view_touch_data), native_view_touch_data_free);
         INIT_LIST_HEAD(&p->head);
         INIT_LIST_HEAD(&p->shared_head);
         p->view                                 = NULL;
         return p;
 }
 
-void nview_touch_data_free(struct nview_touch_data *p)
+void native_view_touch_data_free(struct native_view_touch_data *p)
 {
         list_del(&p->head);
         list_del(&p->shared_head);

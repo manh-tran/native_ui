@@ -21,19 +21,19 @@ extern "C" {
 #include <native_ui/types.h>
 #include <cherry/xml/types.h>
 
-struct nparser *nparser_alloc();
+struct native_parser *native_parser_alloc();
 
-void nparser_free(struct nparser *p);
+void native_parser_free(struct native_parser *p);
 
-void nparser_parse_file(struct nparser *p, char *file, struct nparser *parent);
+void native_parser_parse_file(struct native_parser *p, char *file, struct native_parser *parent);
 
-void nparser_parse_template(struct nparser *p, struct nparser *parent, char *key, size_t len);
+void native_parser_parse_template(struct native_parser *p, struct native_parser *parent, char *key, size_t len);
 
-struct nview *nparser_get_view(struct nparser *p);
+struct native_view *native_parser_get_view(struct native_parser *p);
 
-struct nview *nparser_get_hash_view(struct nparser *p, char *key, size_t len);
+struct native_view *native_parser_get_hash_view(struct native_parser *p, char *key, size_t len);
 
-struct ntouch *nparser_get_touch(struct nparser *p, char *key, size_t len);
+struct native_touch *native_parser_get_touch(struct native_parser *p, char *key, size_t len);
 
 #ifdef __cplusplus
 }

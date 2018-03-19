@@ -23,22 +23,22 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_padding_top(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_padding_top(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->padding.top           = (float)satof(a->value->ptr);
 }
 
-void parse_common_padding_left(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_padding_left(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->padding.left          = (float)satof(a->value->ptr);
 }
 
-void parse_common_padding_bottom(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_padding_bottom(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->padding.bottom        = (float)satof(a->value->ptr);
 }
 
-void parse_common_padding_right(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_padding_right(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->align->padding.right         = (float)satof(a->value->ptr);
 }

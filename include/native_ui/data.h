@@ -20,17 +20,17 @@ extern "C" {
 
 #include <native_ui/types.h>
 
-struct nview_image_view_data *image_view_data_alloc(char *path);
+struct native_view_image_view_data *image_view_data_alloc(char *path);
 
-void image_view_data_free(struct nview_image_view_data *p);
+void image_view_data_free(struct native_view_image_view_data *p);
 
-struct nview_list_view_data *nview_list_view_data_alloc();
+struct native_view_list_view_data *native_view_list_view_data_alloc();
 
-void nview_list_view_data_free(struct nview_list_view_data *p);
+void native_view_list_view_data_free(struct native_view_list_view_data *p);
 
-struct nview_label_data *nview_label_data_alloc();
+struct native_view_label_data *native_view_label_data_alloc();
 
-void nview_label_data_free(struct nview_label_data *p);
+void native_view_label_data_free(struct native_view_label_data *p);
 
 #ifdef __cplusplus
 }

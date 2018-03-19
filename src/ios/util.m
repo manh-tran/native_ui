@@ -55,25 +55,25 @@ UIView *custom_his_test(UIView *current, CGPoint point, UIEvent *event)
         return hitView;
 }
 
-void util_touch_began(struct nview *p, union vec2 liv)
+void util_touch_began(struct native_view *p, union vec2 liv)
 {
         __view_touched = 1;
-        nview_touch_began(p, liv);
+        native_view_touch_began(p, liv);
 }
 
-void util_touch_moved(struct nview *p, union vec2 liv)
+void util_touch_moved(struct native_view *p, union vec2 liv)
 {
-        nview_touch_moved(p, liv);
+        native_view_touch_moved(p, liv);
 }
 
-void util_touch_ended(struct nview *p, union vec2 liv)
+void util_touch_ended(struct native_view *p, union vec2 liv)
 {
-        nview_touch_ended(p, liv);
+        native_view_touch_ended(p, liv);
         __view_touched = 0;
 }
 
-void util_touch_cancelled(struct nview *p, union vec2 liv)
+void util_touch_cancelled(struct native_view *p, union vec2 liv)
 {
-        nview_touch_cancelled(p, liv);
+        native_view_touch_cancelled(p, liv);
         __view_touched = 0;
 }

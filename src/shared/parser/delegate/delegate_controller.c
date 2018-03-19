@@ -24,11 +24,11 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-struct nview *parser_controller(struct xml_element *e, struct nparser *parser, struct nparser *parent)
+struct native_view *parser_controller(struct xml_element *e, struct native_parser *parser, struct native_parser *parent)
 {
         struct xml_attribute *name      = xml_find_attribute(e, "name");
         if(name) {
-                parser->controller      = nexec_alloc_fn(qskey(name->value));
+                parser->controller      = native_controller_alloc_fn(qskey(name->value));
         }
         return NULL;
 }

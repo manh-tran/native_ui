@@ -129,7 +129,7 @@ view_helper.prototype.process_down = function(e, x, y)
                         this.wp.x = x;
                         this.wp.y = y;
 
-                        _js_nview_touch_began(this.ctg.native_ptr, this.ep.x, this.ep.y);
+                        _js_native_view_touch_began(this.ctg.native_ptr, this.ep.x, this.ep.y);
                 }
         }
 }
@@ -141,7 +141,7 @@ view_helper.prototype.process_move = function(e, x, y)
                 v.x = this.ep.x + x - this.wp.x;
                 v.y = this.ep.y + y - this.wp.y;
 
-                _js_nview_touch_moved(this.ctg.native_ptr, v.x, v.y);
+                _js_native_view_touch_moved(this.ctg.native_ptr, v.x, v.y);
 
                 e.stopPropagation();
         }
@@ -154,7 +154,7 @@ view_helper.prototype.process_up = function(e, x, y)
                 v.x = this.ep.x + x - this.wp.x;
                 v.y = this.ep.y + y - this.wp.y;
 
-                _js_nview_touch_ended(this.ctg.native_ptr, v.x, v.y);
+                _js_native_view_touch_ended(this.ctg.native_ptr, v.x, v.y);
 
                 if(this.ctg.native_type == native_type.TEXTFIELD) {
                         this.ctg.custom_content.focus();
@@ -179,7 +179,7 @@ view_helper.prototype.process_cancel = function(e, x, y)
                 v.x = this.ep.x + x - this.wp.x;
                 v.y = this.ep.y + y - this.wp.y;
 
-                _js_nview_touch_cancelled(this.ctg.native_ptr, v.x, v.y);
+                _js_native_view_touch_cancelled(this.ctg.native_ptr, v.x, v.y);
                 this.ctg = null;
                 this.tch = 0;
                 this.ovl.remove();

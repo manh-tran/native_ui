@@ -24,7 +24,7 @@
 #include <cherry/list.h>
 #include <cherry/xml/xml.h>
 
-void parse_common_round(struct nview *v, struct xml_attribute *a, struct nparser *p, struct nparser *parent)
+void parse_common_round(struct native_view *v, struct xml_attribute *a, struct native_parser *p, struct native_parser *parent)
 {
         v->clip_rounds.x = v->clip_rounds.y = v->clip_rounds.z = v->clip_rounds.w = (float)satof(a->value->ptr);
 }

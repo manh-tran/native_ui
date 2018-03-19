@@ -21,29 +21,29 @@ extern "C" {
 #include <native_ui/types.h>
 #include <cherry/xml/types.h>
 
-struct nview *parser_view(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_view(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_label(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_label(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_textfield(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_textfield(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_textview(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_textview(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_listview(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_listview(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_pageview(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_pageview(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_image(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_image(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_label(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_label(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_link(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_link(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_touch(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_touch(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_controller(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_controller(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
-struct nview *parser_template(struct xml_element *e, struct nparser *parser, struct nparser *parent);
+struct native_view *parser_template(struct xml_element *e, struct native_parser *parser, struct native_parser *parent);
 
 #ifdef __cplusplus
 }

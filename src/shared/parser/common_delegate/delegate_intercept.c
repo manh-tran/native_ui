@@ -24,13 +24,13 @@
 #include <cherry/xml/xml.h>
 #include <cherry/stdio.h>
 
-void parse_common_intercept_horizontal(struct nview *v, struct xml_attribute *e, struct nparser *p, struct nparser *parent)
+void parse_common_intercept_horizontal(struct native_view *v, struct xml_attribute *e, struct native_parser *p, struct native_parser *parent)
 {
-        struct nparser *root = p;
+        struct native_parser *root = p;
         while(root) {
-                struct nview *to = nparser_get_hash_view(root, qskey(e->value));
+                struct native_view *to = native_parser_get_hash_view(root, qskey(e->value));
                 if(to) {
-                        nview_set_intercept_horizontal(v, to);
+                        native_view_set_intercept_horizontal(v, to);
                         break;
                 }
                 root = root->parent;
@@ -38,20 +38,20 @@ void parse_common_intercept_horizontal(struct nview *v, struct xml_attribute *e,
 
 }
 
-void parse_common_intercept_vertical(struct nview *v, struct xml_attribute *e, struct nparser *p, struct nparser *parent)
+void parse_common_intercept_vertical(struct native_view *v, struct xml_attribute *e, struct native_parser *p, struct native_parser *parent)
 {
-        struct nparser *root = p;
+        struct native_parser *root = p;
         while(root) {
-                struct nview *to = nparser_get_hash_view(root, qskey(e->value));
+                struct native_view *to = native_parser_get_hash_view(root, qskey(e->value));
                 if(to) {
-                        nview_set_intercept_vertical(v, to);
+                        native_view_set_intercept_vertical(v, to);
                         break;
                 }
                 root = root->parent;
         }
 
-        // struct nview *to = nparser_get_hash_view(p, qskey(e->value));
+        // struct native_view *to = native_parser_get_hash_view(p, qskey(e->value));
         // if(to) {
-        //         nview_set_intercept_vertical(v, to);
+        //         native_view_set_intercept_vertical(v, to);
         // }
 }

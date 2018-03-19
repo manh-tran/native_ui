@@ -32,7 +32,7 @@
 #import <cherry/math/math.h>
 #import "custom/textfield.h"
 
-struct string *nview_get_text(struct nview *p)
+struct string *native_view_get_text(struct native_view *p)
 {
         if(p->type != NATIVE_UI_TEXTFIELD) return NULL;
 
@@ -45,7 +45,7 @@ struct string *nview_get_text(struct nview *p)
         }
 }
 
-void nview_set_text_placeholder(struct nview *p, char *text, size_t len)
+void native_view_set_text_placeholder(struct native_view *p, char *text, size_t len)
 {
         if(p->type != NATIVE_UI_TEXTFIELD) return NULL;
 
