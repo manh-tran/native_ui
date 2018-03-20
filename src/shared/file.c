@@ -32,9 +32,9 @@ struct string *nfile_fullpath(char *file)
 
 u8 nfile_type(char *file)
 {
-        if(strncmp(file, INNER_PATH, sizeof(INNER_PATH) - 1) == 0) {
+        if(strncmp(file, qlkey("inner")) == 0) {
                 return FILE_INNER;
-        } else if(strncmp(file, LOCAL_PATH, sizeof(LOCAL_PATH) - 1) == 0) {
+        } else if(strncmp(file, qlkey("local")) == 0) {
                 return FILE_LOCAL;
         } else if(strncmp(file, SD_PATH, sizeof(SD_PATH) - 1) == 0){
                 return FILE_SDCARD;

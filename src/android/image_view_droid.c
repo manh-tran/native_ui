@@ -35,6 +35,8 @@ static jclass           __class = NULL;
 static jmethodID        __static_method_set_bitmap = NULL;
 static jmethodID        __static_method_load_bitmap = NULL;
 static jmethodID        __static_method_clear_bitmap = NULL;
+static jmethodID        __static_method_image_real_width = NULL;
+static jmethodID        __static_method_image_real_height = NULL;
 
 static void __clear()
 {
@@ -70,6 +72,18 @@ static void __setup()
                         "clearBitmap",
                         "(Ljava/lang/String;)V"
                 );
+
+                __static_method_image_real_width = (*__jni_env)->GetStaticMethodID(__jni_env,
+                                                                               __class,
+                                                                               "imageRealWidth",
+                                                                               "(Lcom/manhtran/nativeui/CustomImageView;)I"
+                );
+
+                __static_method_image_real_height = (*__jni_env)->GetStaticMethodID(__jni_env,
+                                                                                   __class,
+                                                                                   "imageRealHeight",
+                                                                                   "(Lcom/manhtran/nativeui/CustomImageView;)I"
+                );
         }
 }
 
@@ -91,6 +105,11 @@ void native_view_on_change_imageview(struct native_view *p, char *path)
         (*__jni_env)->CallStaticVoidMethod(__jni_env, __class,
                 __static_method_set_bitmap, p->ptr, jpath);
         (*__jni_env)->DeleteLocalRef(__jni_env, jpath);
+
+        p->align->fixed_width                   = (*__jni_env)->CallStaticIntMethod(__jni_env, __class,
+                                                                                     __static_method_image_real_width, p->ptr);
+        p->align->fixed_height                  = (*__jni_env)->CallStaticIntMethod(__jni_env, __class,
+                                                                                    __static_method_image_real_height, p->ptr);
 }
 
 #endif

@@ -39,7 +39,7 @@ static struct npref *__p_alloc(char *content, size_t len, char *key, size_t key_
         return p;
 }
 
-struct map *__cache = NULL;
+static struct map *__cache = NULL;
 
 static void __clear()
 {
